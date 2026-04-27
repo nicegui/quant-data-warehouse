@@ -1,0 +1,35 @@
+# Crypto market data source configuration (OKX)
+# Structure reserved for Phase 2
+
+sources:
+  crypto_pairs:
+    api: fetch_markets
+    params:
+      exchange: okx
+    schedule: "0 6 * * 1"
+    description: "交易对信息"
+    active: false                    # 预留
+
+  crypto_ohlcv:
+    api: fetch_ohlcv
+    params:
+      exchange: okx
+      symbols:
+        - BTC/USDT
+        - ETH/USDT
+        - SOL/USDT
+        - XRP/USDT
+        - DOGE/USDT
+        - ADA/USDT
+        - AVAX/USDT
+        - LINK/USDT
+        - MATIC/USDT
+        - DOT/USDT
+      timeframes:
+        - 1d
+        - 4h
+        - 1h
+    schedule: "*/5 * * * *"
+    incremental: true
+    description: "主流币K线数据"
+    active: false                    # 预留

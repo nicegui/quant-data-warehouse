@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: quantdb
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: quantdb
+      POSTGRES_USER: quant
+      POSTGRES_PASSWORD: quant_pass
+    volumes:
+      - quantdb_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quant -d quantdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  quantdb_data:

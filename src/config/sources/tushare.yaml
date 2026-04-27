@@ -1,0 +1,68 @@
+# Tushare Pro data source configuration
+# See https://tushare.pro/document/2 for API docs
+
+sources:
+  stock_basic:
+    api: stock_basic
+    params:
+      fields: "ts_code,symbol,name,area,industry,market,list_status,list_date,delist_date,is_hs"
+    schedule: "0 6 * * 1"           # 每周一 06:00
+    incremental: false               # 全量更新
+    description: "股票基本信息"
+
+  trade_cal:
+    api: trade_cal
+    params:
+      start_date: "19900101"
+    schedule: "0 6 1 1 *"           # 每年1月1日 06:00
+    incremental: false
+    description: "交易日历"
+
+  adj_factor:
+    api: adj_factor
+    params:
+      start_date: "20000101"
+    schedule: "0 7 * * 1-5"         # 工作日 07:00
+    incremental: true                # 增量更新
+    description: "复权因子"
+
+  stock_daily:
+    api: daily
+    params:
+      start_date: "20000101"
+    schedule: "0 18 * * 1-5"        # 交易日 18:00（收盘后）
+    incremental: true
+    batch_size: 500                  # 一次最多500只股票
+    description: "A股日线行情"
+
+  financial_reports:
+    api: fina_mainbz_vip
+    params:
+      start_date: "20200101"
+    schedule: "0 20 1 * *"          # 每月1日 20:00
+    incremental: true
+    description: "财报主营业务构成"
+
+  financial_indicators:
+    api: fina_indicator_vip
+    params:
+      start_date: "20200101"
+    schedule: "0 20 2 * *"          # 每月2日 20:00
+    incremental: true
+    description: "财务指标 (ROE/EPS/PE等)"
+
+  consultations:
+    api: news
+    params:
+      src: "sina"
+    schedule: "*/5 * * * *"          # 5分钟一次
+    incremental: true
+    description: "快讯咨询"
+
+  major_news:
+    api: major_news
+    params:
+      start_date: "20250101"
+    schedule: "*/30 * * * *"         # 30分钟一次
+    incremental: true
+    description: "重大新闻"
