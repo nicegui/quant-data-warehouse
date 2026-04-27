@@ -10,11 +10,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class DatabaseSettings(BaseSettings):
-    host: str = "localhost"
-    port: int = 5432
-    db: str = "quantdb"
-    user: str = "quant"
-    password: str = "quant_pass"
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    host: str = Field(default="localhost", validation_alias="POSTGRES_HOST")
+    port: int = Field(default=5432, validation_alias="POSTGRES_PORT")
+    db: str = Field(default="quantdb", validation_alias="POSTGRES_DB")
+    user: str = Field(default="quant", validation_alias="POSTGRES_USER")
+    password: str = Field(default="quant_pass", validation_alias="POSTGRES_PASSWORD")
 
     @property
     def dsn(self) -> str:
@@ -26,6 +28,7 @@ class DatabaseSettings(BaseSettings):
 
 
 class TushareSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     token: str = Field(default="", validation_alias="TUSHARE_TOKEN")
 
     @field_validator("token")
@@ -39,6 +42,7 @@ class TushareSettings(BaseSettings):
 
 
 class CryptoSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     exchanges: list[str] = ["okx"]
     okx_api_key: str = Field(default="", validation_alias="OKX_API_KEY")
     okx_api_secret: str = Field(default="", validation_alias="OKX_API_SECRET")

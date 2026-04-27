@@ -24,6 +24,7 @@ from src.collectors.tushare_collector import (
     FinancialIndicatorCollector,
     StockBasicCollector,
     AdjFactorCollector,
+    TopInstCollector,
 )
 from src.pipeline.engine import run_pipeline
 from src.utils.logging import setup_logging, get_logger
@@ -65,6 +66,12 @@ COLLECTORS = {
     },
     "adj_factor": {
         "cls": AdjFactorCollector,
+        "params": {},
+        "export": True,
+        "curated": False,
+    },
+    "top_inst": {
+        "cls": TopInstCollector,
         "params": {},
         "export": True,
         "curated": False,
