@@ -138,3 +138,47 @@ class CuratedCryptoOhlcv(TimestampMixin, Base):
     volume: Mapped[float] = mapped_column(Float, nullable=False)
     count: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     timeframe: Mapped[str] = mapped_column(String(8), nullable=False)
+
+
+# ──────────────────────────────────────────
+#  DAILY BASIC (每日基本面指标)
+# ──────────────────────────────────────────
+
+class RawDailyBasic(TimestampMixin, Base):
+    """A-share daily basic data — PE, PB, turnover rate, market cap, etc.
+
+    Source: Tushare daily_basic API
+    API fields: ts_code, trade_date, close, turnover_rate, turnover_rate_f,
+                volume_ratio, pe, pe_ttm, pb, ps, ps_ttm, dv_ratio, dv_ttm,
+                total_share, float_share, free_share, total_mv, circ_mv
+    """
+    __tablename__ = "raw_daily_basic"
+    __table_args__ = (
+        {"comment": "A股每日基本面指标 — PE/PB/换手率/市值"}
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    trade_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+
+    close: Mapped[float] = mapped_column(Float, nullable=False, comment="收盘价")
+    turnover_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="换手率(%)")
+    turnover_rate_f: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="自由流通股换手率(%)")
+    volume_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="量比")
+    pe: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="市盈率(静态)")
+    pe_ttm: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="市盈率(TTM)")
+    pb: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="市净率")
+    ps: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="市销率")
+    ps_ttm: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="市销率(TTM)")
+    dv_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="股息率(%)")
+    dv_ttm: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="股息率(TTM)")
+    total_mv: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="总市值(万元)")
+    circ_mv: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="流通市值(万元)")
+    total_share: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="总股本(万股)")
+    float_share: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="流通股本(万股)")
+    free_share: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="自由流通股本(万股)")
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, comment="完整API响应JSON"
+    )

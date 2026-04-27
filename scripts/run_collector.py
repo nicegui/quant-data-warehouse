@@ -3,7 +3,7 @@
 
 Usage:
     python scripts/run_collector.py stock_daily [--export] [--curated]
-    python scripts/run_collector.py consultations [--export]
+    python scripts/run_collector.py consultations
     python scripts/run_collector.py financial_reports
     python scripts/run_collector.py stock_basic
     python scripts/run_collector.py adj_factor
@@ -25,6 +25,14 @@ from src.collectors.tushare_collector import (
     StockBasicCollector,
     AdjFactorCollector,
     TopInstCollector,
+    DailyBasicCollector,
+    MoneyflowCollector,
+    StkLimitCollector,
+    ConceptCollector,
+    IndexCollector,
+    MacroCollector,
+    FuturesCollector,
+    FundCollector,
 )
 from src.pipeline.engine import run_pipeline
 from src.utils.logging import setup_logging, get_logger
@@ -39,6 +47,12 @@ COLLECTORS = {
         "params": {},
         "export": True,
         "curated": True,
+    },
+    "daily_basic": {
+        "cls": DailyBasicCollector,
+        "params": {},
+        "export": True,
+        "curated": False,
     },
     "consultations": {
         "cls": ConsultationCollector,
@@ -74,6 +88,42 @@ COLLECTORS = {
         "cls": TopInstCollector,
         "params": {},
         "export": True,
+        "curated": False,
+    },
+    "stk_limit": {
+        "cls": StkLimitCollector,
+        "params": {},
+        "export": False,
+        "curated": False,
+    },
+    "concept": {
+        "cls": ConceptCollector,
+        "params": {},
+        "export": False,
+        "curated": False,
+    },
+    "index_daily": {
+        "cls": IndexCollector,
+        "params": {},
+        "export": False,
+        "curated": False,
+    },
+    "macro": {
+        "cls": MacroCollector,
+        "params": {},
+        "export": False,
+        "curated": False,
+    },
+    "futures": {
+        "cls": FuturesCollector,
+        "params": {},
+        "export": False,
+        "curated": False,
+    },
+    "fund": {
+        "cls": FundCollector,
+        "params": {},
+        "export": False,
         "curated": False,
     },
 }

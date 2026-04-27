@@ -148,3 +148,29 @@ class RawTopList(TimestampMixin, Base):
     raw_json: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True, comment="完整API响应JSON"
     )
+
+
+class RawStkLimit(TimestampMixin, Base):
+    """涨跌停价格限制 — Tushare stk_limit."""
+    __tablename__ = "raw_stk_limit"
+    __table_args__ = {"comment": "涨跌停价格限制 — 原始API返回"}
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    trade_date: Mapped[datetime] = mapped_column(
+        Date, nullable=False, index=True, comment="交易日期"
+    )
+    ts_code: Mapped[str] = mapped_column(
+        String(16), nullable=False, index=True, comment="股票代码"
+    )
+    pre_close: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="前收盘价"
+    )
+    up_limit: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="涨停价"
+    )
+    down_limit: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="跌停价"
+    )
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, comment="完整API响应JSON"
+    )
