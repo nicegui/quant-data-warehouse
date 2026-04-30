@@ -82,3 +82,43 @@ class RawFundNav(TimestampMixin, Base):
     unit_nav = Column(Float, nullable=True)           # 单位净值
     accum_nav = Column(Float, nullable=True)          # 累计净值
     adj_nav = Column(Float, nullable=True)            # 复权净值
+
+
+class RawFundAdj(TimestampMixin, Base):
+    """基金复权因子 (fund_adj)."""
+    __tablename__ = "raw_fund_adj"
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code = Column(String(32), nullable=False, index=True)
+    trade_date = Column(String(8), nullable=False, index=True)
+    adj_factor = Column(Float)
+
+class RawFundDiv(TimestampMixin, Base):
+    """基金分红 (fund_div)."""
+    __tablename__ = "raw_fund_div"
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code = Column(String(32), nullable=False, index=True)
+    ann_date = Column(String(8))
+    imp_anndate = Column(String(8))
+    base_date = Column(String(8))
+    div_proc = Column(String(64))
+    record_date = Column(String(8))
+    ex_date = Column(String(8))
+    pay_date = Column(String(8))
+    earpay_date = Column(String(8))
+    net_ex_date = Column(String(8))
+    div_cash = Column(Float)
+    base_unit = Column(Float)
+    ear_distr = Column(Float)
+    ear_amount = Column(Float)
+    account_date = Column(String(8))
+    base_year = Column(String(8))
+
+class RawFundShare(TimestampMixin, Base):
+    """基金规模 (fund_share)."""
+    __tablename__ = "raw_fund_share"
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code = Column(String(32), nullable=False, index=True)
+    trade_date = Column(String(8), nullable=False, index=True)
+    fd_share = Column(Float)
+    fund_type = Column(String(32))
+    market = Column(String(8))

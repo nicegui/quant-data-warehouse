@@ -96,3 +96,27 @@ class RawFutWsr(TimestampMixin, Base):
     vol = Column(Float, nullable=True, comment="今日仓单量")
     vol_chg = Column(Float, nullable=True, comment="仓单变化量")
     unit = Column(String(8), nullable=True, comment="单位")
+
+
+class RawFutMapping(TimestampMixin, Base):
+    """主力合约映射 (fut_mapping)."""
+    __tablename__ = "raw_fut_mapping"
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code = Column(String(32), nullable=False, index=True)
+    trade_date = Column(String(8), nullable=False, index=True)
+    mapping_ts_code = Column(String(32), nullable=False)
+
+class RawFutSettle(TimestampMixin, Base):
+    """结算参数 (fut_settle)."""
+    __tablename__ = "raw_fut_settle"
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code = Column(String(32), nullable=False, index=True)
+    trade_date = Column(String(8), nullable=False, index=True)
+    settle = Column(Float)
+    trading_fee_rate = Column(Float)
+    trading_fee = Column(Float)
+    delivery_fee = Column(Float)
+    b_hedging_margin_rate = Column(Float)
+    s_hedging_margin_rate = Column(Float)
+    long_margin_rate = Column(Float)
+    short_margin_rate = Column(Float)

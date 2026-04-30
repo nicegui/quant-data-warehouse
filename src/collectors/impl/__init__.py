@@ -73,6 +73,19 @@ from src.collectors.impl.top10_floatholders import Top10FloatHoldersCollector
 from src.collectors.impl.suspend import SuspendCollector
 from src.collectors.impl.disclosure_date import DisclosureDateCollector
 
+# ── 中优补缺 (2026-04-30) ──
+from src.collectors.impl.fut_holding import FutHoldingCollector
+from src.collectors.impl.fut_mapping import FutMappingCollector
+from src.collectors.impl.fut_settle import FutSettleCollector
+from src.collectors.impl.fund_adj import FundAdjCollector
+from src.collectors.impl.fund_div import FundDivCollector
+from src.collectors.impl.fund_share import FundShareCollector
+from src.collectors.impl.fund_portfolio import FundPortfolioCollector
+from src.collectors.impl.cb_basic import CbBasicCollector
+from src.collectors.impl.cb_issue import CbIssueCollector
+from src.collectors.impl.cb_rate import CbRateCollector
+from src.collectors.impl.yield_curve import YieldCurveCollector
+
 __all__ = [
     "StockDailyCollector",
     "StockBasicCollector",
@@ -134,4 +147,9 @@ __all__ = [
     "StkHolderTradeCollector", "Top10HoldersCollector",
     "Top10FloatHoldersCollector", "SuspendCollector",
     "DisclosureDateCollector",
+    # 中优补缺
+    "FutHoldingCollector", "FutMappingCollector", "FutSettleCollector",
+    "FundAdjCollector", "FundDivCollector", "FundShareCollector",
+    "FundPortfolioCollector", "CbBasicCollector", "CbIssueCollector",
+    "CbRateCollector", "YieldCurveCollector",
 ]

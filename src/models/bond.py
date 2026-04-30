@@ -43,3 +43,23 @@ class RawBondDaily(TimestampMixin, Base):
     raw_json: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True, comment="完整API响应JSON"
     )
+
+
+class RawYcCb(TimestampMixin, Base):
+    """国债收益率曲线 (yc_cb).
+
+    Source: Tushare yc_cb API
+    Fields: trade_date, ts_code, curve_name, curve_type, curve_term, yield
+    """
+    __tablename__ = "raw_yc_cb"
+    __table_args__ = (
+        {"comment": "国债收益率曲线(yc_cb) — 原始数据"},
+    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    trade_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, index=True)
+    ts_code: Mapped[Optional[str]] = mapped_column(String(16), nullable=True, index=True)
+    curve_name: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    curve_type: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    curve_term: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    yield_: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
