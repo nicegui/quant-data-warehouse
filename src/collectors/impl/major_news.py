@@ -1,8 +1,8 @@
 """重大新闻 — MajorNewsCollector
 
-Tushare major_news API.
+Tushare major_news API — premium token required.
+API fields: title, pub_time, src, url
 """
-
 from __future__ import annotations
 
 import json
@@ -15,14 +15,14 @@ from src.collectors.base import BaseTushareCollector
 
 
 class MajorNewsCollector(BaseTushareCollector):
-    """重大新闻 collector."""
+    """重大新闻 collector — premium."""
 
     def __init__(self, token: str):
         super().__init__("major_news", token)
 
     @property
     def checkpoint_key(self):
-        return "end_date"
+        return "pub_time"
 
     def fetch(self, src: str = "", start_date: str = "", end_date: str = "", **kwargs) -> list[dict]:
         ed = end_date or dt.now().strftime("%Y%m%d")
@@ -36,12 +36,10 @@ class MajorNewsCollector(BaseTushareCollector):
         validated = []
         for row in raw:
             validated.append({
-                "news_id": row.get("news_id", ""),
                 "title": row.get("title", ""),
-                "content": row.get("content"),
-                "source": row.get("src"),
                 "pub_time": row.get("pub_time"),
-                "impact_level": row.get("impact_level"),
+                "source": row.get("src"),
+                "url": row.get("url"),
                 "raw_json": json.dumps(row, ensure_ascii=False, default=str),
             })
         return validated
@@ -50,7 +48,10 @@ class MajorNewsCollector(BaseTushareCollector):
         written = 0
         with db_session() as session:
             for rec in records:
-                existing = session.query(RawMajorNews).filter_by(news_id=rec["news_id"]).first()
+                existing = session.query(RawMajorNews).filter_by(
+                    title=rec["title"],
+                    pub_time=rec["pub_time"],
+                ).first()
                 if existing:
                     continue
                 session.add(RawMajorNews(**rec))

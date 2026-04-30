@@ -1,12 +1,11 @@
 """快讯 — ConsultationCollector
 
-Tushare news API.
+Tushare news API — premium token required.
+API returns datetime, content, title. Do NOT pass start_date.
 """
-
 from __future__ import annotations
 
 import json
-from datetime import datetime as dt
 from typing import Any
 
 from src.db.session import db_session
@@ -15,29 +14,23 @@ from src.collectors.base import BaseTushareCollector
 
 
 class ConsultationCollector(BaseTushareCollector):
-    """快讯咨询 collector."""
+    """快讯咨询 collector — premium."""
 
     def __init__(self, token: str):
         super().__init__("consultation", token)
 
-    @property
-    def checkpoint_key(self):
-        return "end_date"
-
-    def fetch(self, start_date: str = "", end_date: str = "", **kwargs) -> list[dict]:
-        ed = end_date or dt.now().strftime("%Y%m%d")
-        sd = start_date or ed
-        return self.api_call("news", start_date=sd, end_date=ed)
+    def fetch(self, **kwargs) -> list[dict]:
+        # news API breaks with start_date — omit it
+        df = self.pro.query("news")
+        return df.to_dict(orient="records") if df is not None and not df.empty else []
 
     def validate(self, raw: list[dict]) -> list[dict]:
         validated = []
         for row in raw:
             validated.append({
-                "news_id": row.get("news_id", ""),
-                "title": row.get("title", ""),
+                "datetime": row.get("datetime", ""),
+                "title": row.get("title"),
                 "content": row.get("content"),
-                "source": row.get("src"),
-                "pub_time": row.get("pub_time"),
                 "raw_json": json.dumps(row, ensure_ascii=False, default=str),
             })
         return validated
@@ -46,7 +39,9 @@ class ConsultationCollector(BaseTushareCollector):
         written = 0
         with db_session() as session:
             for rec in records:
-                existing = session.query(RawConsultation).filter_by(news_id=rec["news_id"]).first()
+                existing = session.query(RawConsultation).filter_by(
+                    datetime=rec["datetime"],
+                ).first()
                 if existing:
                     continue
                 session.add(RawConsultation(**rec))
