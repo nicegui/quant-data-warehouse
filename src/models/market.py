@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import BigInteger, DateTime, Float, String
+from sqlalchemy import BigInteger, DateTime, Float, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -25,7 +25,12 @@ class RawStockDaily(TimestampMixin, Base):
     """A-share daily OHLCV — raw API response, immutable."""
     __tablename__ = "raw_stock_daily"
     __table_args__ = (
-        {"comment": "A股日线 — 原始API返回，不可变"}
+        {"comment": "A股日线 — 原始API返回，不可变"},
+    )
+
+    __table_args__ = (
+        UniqueConstraint("ts_code", "trade_date", name="uq_raw_stock_daily_code_date"),
+        {"comment": "A股日线 — 原始API返回，不可变"},
     )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)

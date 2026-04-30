@@ -1,0 +1,58 @@
+"""基金/ETF — FundCollector
+
+fund_daily + fund_portfolio from Tushare API.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from src.db.session import db_session
+from src.models.fund import RawFundDaily
+from src.collectors.base import BaseTushareCollector
+from src.collectors.impl._utils import _f
+
+
+class FundCollector(BaseTushareCollector):
+    """基金/ETF collector."""
+
+    def __init__(self, token: str):
+        super().__init__("fund", token)
+
+    def fetch(self, trade_date: str = "", **kwargs) -> list[dict]:
+        from datetime import datetime as dt
+
+        td = trade_date or dt.now().strftime("%Y%m%d")
+        return self.api_call("fund_daily", trade_date=td)
+
+    def validate(self, raw: list[dict]) -> list[dict]:
+        validated = []
+        for row in raw:
+            validated.append({
+                "ts_code": row.get("ts_code", ""),
+                "trade_date": row.get("trade_date"),
+                "open": _f(row.get("open")),
+                "high": _f(row.get("high")),
+                "low": _f(row.get("low")),
+                "close": _f(row.get("close")),
+                "pre_close": _f(row.get("pre_close")),
+                "change": _f(row.get("change")),
+                "pct_chg": _f(row.get("pct_chg")),
+                "vol": _f(row.get("vol")),
+                "amount": _f(row.get("amount")),
+            })
+        return validated
+
+    def store_raw(self, records: list[dict]) -> int:
+        written = 0
+        with db_session() as session:
+            for rec in records:
+                existing = session.query(RawFundDaily).filter_by(
+                    ts_code=rec["ts_code"],
+                    trade_date=rec["trade_date"],
+                ).first()
+                if existing:
+                    continue
+                session.add(RawFundDaily(**rec))
+                written += 1
+        return written
