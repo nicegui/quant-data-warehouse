@@ -89,6 +89,37 @@ from src.collectors.impl.cb_basic import CbBasicCollector
 from src.collectors.impl.cb_issue import CbIssueCollector
 from src.collectors.impl.cb_rate import CbRateCollector
 from src.collectors.impl.yield_curve import YieldCurveCollector
+from src.collectors.impl.stk_auction import StkAuctionCollector
+from src.collectors.impl.index_dailybasic import IndexDailyBasicCollector
+from src.collectors.impl.index_global import IndexGlobalCollector
+from src.collectors.impl.limit_list_all import LimitListAllCollector
+from src.collectors.impl.index_monthly import IndexMonthlyCollector
+from src.collectors.impl.index_weekly import IndexWeeklyCollector
+from src.collectors.impl.ths_daily import ThsDailyCollector
+from src.collectors.impl.ths_index import ThsIndexCollector
+from src.collectors.impl.opt_basic import OptBasicCollector
+from src.collectors.impl.opt_daily import OptDailyCollector
+from src.collectors.impl.fx_daily import FxDailyCollector
+from src.collectors.impl.fx_obasic import FxBasicCollector
+from src.collectors.impl.repo_daily import RepoDailyCollector
+from src.collectors.impl.bond_blk import BondBlkCollector
+from src.collectors.impl.stk_surv import StkSurvCollector
+from src.collectors.impl.stk_managers import StkManagersCollector
+from src.collectors.impl.stk_rewards import StkRewardsCollector
+from src.collectors.impl.broker_recommend import BrokerRecommendCollector
+from src.collectors.impl.fund_manager import FundManagerCollector
+from src.collectors.impl.hs_const import HsConstCollector
+from src.collectors.impl.ggt_monthly import GgtMonthlyCollector
+from src.collectors.impl.hk_basic import HkBasicCollector
+from src.collectors.impl.hk_mins import HkMinsCollector
+from src.collectors.impl.us_tradecal import UsTradeCalCollector
+from src.collectors.impl.shibor_lpr import ShiborLprCollector
+from src.collectors.impl.shibor_quote import ShiborQuoteCollector
+from src.collectors.impl.libor import LiborCollector
+from src.collectors.impl.hibor import HiborCollector
+from src.collectors.impl.wz_index import WzIndexCollector
+from src.collectors.impl.eco_cal import EcoCalCollector
+
 
 
 __all__ = [
@@ -120,4 +151,17 @@ __all__ = [
     "FundAdjCollector", "FundDivCollector", "FundShareCollector",
     "FundPortfolioCollector", "CbBasicCollector", "CbIssueCollector",
     "CbRateCollector", "YieldCurveCollector",
+    "StkAuctionCollector", "IndexDailyBasicCollector", "IndexGlobalCollector",
+    "LimitListAllCollector", "IndexMonthlyCollector", "IndexWeeklyCollector",
+    "ThsDailyCollector", "ThsIndexCollector",
+    "OptBasicCollector", "OptDailyCollector",
+    "FxDailyCollector", "FxBasicCollector",
+    "RepoDailyCollector", "BondBlkCollector",
+    "StkSurvCollector", "StkManagersCollector", "StkRewardsCollector",
+    "BrokerRecommendCollector", "FundManagerCollector",
+    "HsConstCollector", "GgtMonthlyCollector",
+    "HkBasicCollector", "HkMinsCollector", "UsTradeCalCollector",
+    "ShiborLprCollector", "ShiborQuoteCollector", "LiborCollector",
+    "HiborCollector", "WzIndexCollector", "EcoCalCollector",
+]
 ]

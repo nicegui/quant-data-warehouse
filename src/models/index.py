@@ -136,3 +136,31 @@ class RefIndexClassify(TimestampMixin, Base):
     is_pub: Mapped[Optional[str]] = mapped_column(String(4), nullable=True)
     parent_code: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
     src: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+
+class RawThsDaily(TimestampMixin, Base):
+    """同花顺板块日线 (ths_daily)."""
+    __tablename__ = "raw_ths_daily_new"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    open: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    high: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    low: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pre_close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    avg_price: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    change: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pct_change: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    vol: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    turnover_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
+class RefThsIndex(TimestampMixin, Base):
+    """同花顺板块指数 (ths_index)."""
+    __tablename__ = "ref_ths_index"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(32), nullable=False, unique=True, index=True)
+    name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    count: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    exchange: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    list_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    type: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)

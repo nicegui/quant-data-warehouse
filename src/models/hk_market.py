@@ -37,3 +37,33 @@ class RawHkDaily(TimestampMixin, Base):
     raw_json: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True, comment="完整API响应JSON"
     )
+
+class RefHkBasic(TimestampMixin, Base):
+    """港股列表 (hk_basic)."""
+    __tablename__ = "ref_hk_basic"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, unique=True, index=True)
+    name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    fullname: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
+    enname: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
+    cn_spell: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    market: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    list_status: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    list_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    delist_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    trade_unit: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    isin: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+    curr_type: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+
+class RawHkMins(TimestampMixin, Base):
+    """港股分钟行情 (hk_mins)."""
+    __tablename__ = "raw_hk_mins"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    trade_time: Mapped[str] = mapped_column(String(19), nullable=False, index=True)
+    open: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    high: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    low: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    vol: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)

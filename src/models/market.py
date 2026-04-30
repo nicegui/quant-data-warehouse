@@ -414,3 +414,101 @@ class RawShareFloat(TimestampMixin, Base):
     raw_json: Mapped[Optional[str]] = mapped_column(
         String, nullable=True, comment="完整API响应JSON"
     )
+
+class RawStkAuction(TimestampMixin, Base):
+    """盘前集合竞价 (stk_auction)."""
+    __tablename__ = "raw_stk_auction"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    vol: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    price: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pre_close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    turnover_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    volume_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    float_share: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
+class RawIndexDailyBasic(TimestampMixin, Base):
+    """大盘指数每日指标 (index_dailybasic)."""
+    __tablename__ = "raw_index_dailybasic"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    total_mv: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    float_mv: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    total_share: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    float_share: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    free_share: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    turnover_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    turnover_rate_f: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pe: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pe_ttm: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pb: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
+class RawIndexGlobal(TimestampMixin, Base):
+    """全球指数行情 (index_global)."""
+    __tablename__ = "raw_index_global"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    open: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    high: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    low: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pre_close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    change: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pct_chg: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    swing: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    vol: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
+class RawLimitListAll(TimestampMixin, Base):
+    """涨跌停列表全量 (limit_list)."""
+    __tablename__ = "raw_limit_list_all"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pct_chg: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    amp: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    fc_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    fl_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    fd_amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    first_time: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    last_time: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    open_times: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    strth: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    limit: Mapped[Optional[str]] = mapped_column(String(4), nullable=True)
+
+class RawIndexMonthly(TimestampMixin, Base):
+    """指数月线 (index_monthly)."""
+    __tablename__ = "raw_index_monthly"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    open: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    high: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    low: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pre_close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    change: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pct_chg: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    vol: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
+class RawIndexWeekly(TimestampMixin, Base):
+    """指数周线 (index_weekly)."""
+    __tablename__ = "raw_index_weekly"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    open: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    high: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    low: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pre_close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    change: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pct_chg: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    vol: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)

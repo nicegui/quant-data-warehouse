@@ -122,3 +122,18 @@ class RawFundShare(TimestampMixin, Base):
     fd_share = Column(Float)
     fund_type = Column(String(32))
     market = Column(String(8))
+
+class RawFundManager(TimestampMixin, Base):
+    """基金经理 (fund_manager)."""
+    __tablename__ = "raw_fund_manager"
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code = Column(String(32), nullable=False, index=True)
+    ann_date = Column(String(8))
+    name = Column(String(64))
+    gender = Column(String(4))
+    birth_year = Column(String(8))
+    edu = Column(String(32))
+    nationality = Column(String(32))
+    begin_date = Column(String(8))
+    end_date = Column(String(8))
+    resume = Column(String(1024))

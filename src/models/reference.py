@@ -135,3 +135,20 @@ class RefDisclosureDate(TimestampMixin, Base):
     pre_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
     actual_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
     raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+class RawRepoDaily(TimestampMixin, Base):
+    """质押式回购日行情 (repo_daily)."""
+    __tablename__ = "raw_repo_daily"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    repo_maturity: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    pre_close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    open: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    high: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    low: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    weight: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    weight_r: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    num: Mapped[Optional[float]] = mapped_column(Float, nullable=True)

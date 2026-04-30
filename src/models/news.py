@@ -62,3 +62,17 @@ class RawCctvNews(TimestampMixin, Base):
     title: Mapped[str] = mapped_column(String(512), nullable=False, comment="新闻标题")
     content: Mapped[Optional[str]] = mapped_column(Text, nullable=True, comment="新闻内容")
     raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+class RawStkSurv(TimestampMixin, Base):
+    """机构调研 (stk_surv)."""
+    __tablename__ = "raw_stk_surv"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    surv_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, index=True)
+    fund_visitors: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    rece_place: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
+    rece_mode: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    rece_org: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    org_type: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    comp_rece: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)

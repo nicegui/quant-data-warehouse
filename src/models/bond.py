@@ -63,3 +63,14 @@ class RawYcCb(TimestampMixin, Base):
     curve_term: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     yield_: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+class RawBondBlk(TimestampMixin, Base):
+    """债券大宗交易 (bond_blk)."""
+    __tablename__ = "raw_bond_blk"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    price: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    vol: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)

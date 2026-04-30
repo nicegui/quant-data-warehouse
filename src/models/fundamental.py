@@ -437,3 +437,31 @@ class RawStkHolderFloatTop(TimestampMixin, Base):
     hold_change: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     holder_type: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+class RawStkManagers(TimestampMixin, Base):
+    """上市公司管理层 (stk_managers)."""
+    __tablename__ = "raw_stk_managers"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    ann_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    gender: Mapped[Optional[str]] = mapped_column(String(4), nullable=True)
+    lev: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    title: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    edu: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    national: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    birthday: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    begin_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    end_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+
+class RawStkRewards(TimestampMixin, Base):
+    """管理层薪酬 (stk_rewards)."""
+    __tablename__ = "raw_stk_rewards"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    ann_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    end_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    title: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    reward: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    hold_vol: Mapped[Optional[float]] = mapped_column(Float, nullable=True)

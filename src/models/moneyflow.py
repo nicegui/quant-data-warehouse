@@ -156,3 +156,27 @@ class RawGgtDaily(TimestampMixin, Base):
 
     def __repr__(self):
         return f"<RawGgtDaily({self.trade_date})>"
+
+class RawGgtMonthly(TimestampMixin, Base):
+    """港股通月度成交 (ggt_monthly)."""
+    __tablename__ = "raw_ggt_monthly"
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    month = Column(String(6), nullable=False, index=True)
+    day_buy_amt = Column(Float)
+    day_buy_vol = Column(Float)
+    day_sell_amt = Column(Float)
+    day_sell_vol = Column(Float)
+    total_buy_amt = Column(Float)
+    total_buy_vol = Column(Float)
+    total_sell_amt = Column(Float)
+    total_sell_vol = Column(Float)
+
+class RefHsConst(TimestampMixin, Base):
+    """沪深股通成分股 (hs_const)."""
+    __tablename__ = "ref_hs_const"
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code = Column(String(16), nullable=False, index=True)
+    hs_type = Column(String(2))
+    in_date = Column(String(8))
+    out_date = Column(String(8))
+    is_new = Column(String(4))

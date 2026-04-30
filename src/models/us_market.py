@@ -68,3 +68,11 @@ class RawUsBasic(TimestampMixin, Base):
     raw_json: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True, comment="完整API响应JSON"
     )
+
+class RefUsTradeCal(TimestampMixin, Base):
+    """美股交易日历 (us_tradecal)."""
+    __tablename__ = "ref_us_tradecal"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    cal_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    is_open: Mapped[Optional[str]] = mapped_column(String(4), nullable=True)
+    pretrade_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
