@@ -120,6 +120,20 @@ from src.collectors.impl.hibor import HiborCollector
 from src.collectors.impl.wz_index import WzIndexCollector
 from src.collectors.impl.eco_cal import EcoCalCollector
 
+# ── 筹码分布 (2026-05-01) ──
+from src.collectors.impl.cyq_chips import CyqChipsCollector
+from src.collectors.impl.cyq_perf import CyqPerfCollector
+
+# ── dc_index / margin_secs / bak_basic (2026-05-01) ──
+from src.collectors.impl.dc_index import DcIndexCollector
+from src.collectors.impl.margin_secs import MarginSecsCollector
+from src.collectors.impl.bak_basic import BakBasicCollector
+
+# ── Non-Tushare collectors (2026-05-01) ──
+from src.collectors.impl.akshare_macro import AkshareMacroCollector
+from src.collectors.impl.akshare_hsgt import AkshareHsgtCollector
+from src.collectors.impl.baostock_basic import BaostockBasicCollector
+
 
 
 __all__ = [
@@ -163,5 +177,10 @@ __all__ = [
     "HkBasicCollector", "HkMinsCollector", "UsTradeCalCollector",
     "ShiborLprCollector", "ShiborQuoteCollector", "LiborCollector",
     "HiborCollector", "WzIndexCollector", "EcoCalCollector",
-]
+    # 筹码分布
+    "CyqChipsCollector", "CyqPerfCollector",
+    # dc_index / margin_secs / bak_basic
+    "DcIndexCollector", "MarginSecsCollector", "BakBasicCollector",
+    # Non-Tushare collectors (akshare / baostock)
+    "AkshareMacroCollector", "AkshareHsgtCollector", "BaostockBasicCollector",
 ]

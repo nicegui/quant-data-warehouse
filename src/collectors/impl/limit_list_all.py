@@ -14,7 +14,7 @@ class LimitListAllCollector(BaseTushareCollector):
         p = {}
         if trade_date: p["trade_date"] = trade_date
         if ts_code: p["ts_code"] = ts_code
-        return self.api_call("limit_list", **p)
+        return self.api_call("limit_list_d", **p)
     def validate(self, raw):
         r = []
         nf = ("close","pct_chg","amp","fc_ratio","fl_ratio","fd_amount","strth")

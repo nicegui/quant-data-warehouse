@@ -152,3 +152,49 @@ class RawRepoDaily(TimestampMixin, Base):
     weight_r: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     num: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
+
+class RawBakBasic(TimestampMixin, Base):
+    """备用列表 (bak_basic).
+
+    Source: Tushare bak_basic API
+    Fields: trade_date, ts_code, name, industry, area, pe, float_share,
+            total_share, total_assets, liquid_assets, fixed_assets, reserved,
+            reserved_pershare, eps, bvps, pb, list_date, undp, per_undp,
+            rev_yoy, profit_yoy, gpr, npr, holder_num
+    """
+    __tablename__ = "raw_bak_basic"
+    __table_args__ = (
+        UniqueConstraint("trade_date", "ts_code", name="uq_raw_bak_basic_date_code"),
+        {"comment": "备用列表 — 原始数据"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    ts_code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, comment="股票名称")
+    industry: Mapped[Optional[str]] = mapped_column(String(32), nullable=True, comment="行业")
+    area: Mapped[Optional[str]] = mapped_column(String(16), nullable=True, comment="地区")
+    pe: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="市盈率")
+    float_share: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="流通股本(万股)")
+    total_share: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="总股本(万股)")
+    total_assets: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="总资产(亿元)")
+    liquid_assets: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="流动资产(亿元)")
+    fixed_assets: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="固定资产(亿元)")
+    reserved: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="公积金(元)")
+    reserved_pershare: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="每股公积金")
+    eps: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="每股收益")
+    bvps: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="每股净资产")
+    pb: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="市净率")
+    list_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="上市日期")
+    undp: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="未分配利润(元)")
+    per_undp: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="每股未分配利润")
+    rev_yoy: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="收入同比(%)")
+    profit_yoy: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="利润同比(%)")
+    gpr: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="毛利率(%)")
+    npr: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="净利率(%)")
+    holder_num: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True, comment="股东人数")
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True, comment="完整API响应JSON")
+
+    def __repr__(self):
+        return f"<RawBakBasic({self.trade_date}, {self.ts_code})>"

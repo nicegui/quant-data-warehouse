@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import BigInteger, Date, Float, String, Text
+from sqlalchemy import BigInteger, Date, Float, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.models.base import Base, TimestampMixin
@@ -170,6 +170,87 @@ class RawStkLimit(TimestampMixin, Base):
     )
     down_limit: Mapped[Optional[float]] = mapped_column(
         Float, nullable=True, comment="跌停价"
+    )
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, comment="完整API响应JSON"
+    )
+
+
+class RawCyqChips(TimestampMixin, Base):
+    """筹码分布 — Tushare cyq_chips.
+
+    Each row = one price level's chip concentration for one stock on one day.
+    Deduplicates on (ts_code, trade_date, price).
+    """
+    __tablename__ = "raw_cyq_chips"
+    __table_args__ = (
+        UniqueConstraint("ts_code", "trade_date", "price", name="uq_cyq_chips_ts_code_date_price"),
+        {"comment": "筹码分布 — 原始API返回"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(
+        String(16), nullable=False, index=True, comment="股票代码"
+    )
+    trade_date: Mapped[datetime] = mapped_column(
+        Date, nullable=False, index=True, comment="交易日期"
+    )
+    price: Mapped[float] = mapped_column(
+        Float, nullable=False, comment="价格区间"
+    )
+    percent: Mapped[float] = mapped_column(
+        Float, nullable=False, comment="筹码占比(%)"
+    )
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, comment="完整API响应JSON"
+    )
+
+
+class RawCyqPerf(TimestampMixin, Base):
+    """筹码表现 — Tushare cyq_perf.
+
+    Each row = one stock's chip performance metrics on one day.
+    Deduplicates on (ts_code, trade_date).
+    """
+    __tablename__ = "raw_cyq_perf"
+    __table_args__ = (
+        UniqueConstraint("ts_code", "trade_date", name="uq_cyq_perf_ts_code_date"),
+        {"comment": "筹码表现 — 原始API返回"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(
+        String(16), nullable=False, index=True, comment="股票代码"
+    )
+    trade_date: Mapped[datetime] = mapped_column(
+        Date, nullable=False, index=True, comment="交易日期"
+    )
+    his_low: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="历史最低价"
+    )
+    his_high: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="历史最高价"
+    )
+    cost_5pct: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="5%筹码成本"
+    )
+    cost_15pct: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="15%筹码成本"
+    )
+    cost_50pct: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="50%筹码成本"
+    )
+    cost_85pct: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="85%筹码成本"
+    )
+    cost_95pct: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="95%筹码成本"
+    )
+    weight_avg: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="加权平均成本"
+    )
+    winner_rate: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="获利盘比例(%)"
     )
     raw_json: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True, comment="完整API响应JSON"

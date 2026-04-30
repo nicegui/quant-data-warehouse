@@ -180,3 +180,25 @@ class RefHsConst(TimestampMixin, Base):
     in_date = Column(String(8))
     out_date = Column(String(8))
     is_new = Column(String(4))
+
+
+class RawMarginSecs(TimestampMixin, Base):
+    """融资融券标的 (margin_secs).
+
+    Source: Tushare margin_secs API
+    Fields: trade_date, ts_code, name, exchange
+    """
+    __tablename__ = "raw_margin_secs"
+    __table_args__ = (
+        {"comment": "融资融券标的 — 原始数据"},
+    )
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    trade_date = Column(String(8), nullable=False, index=True)
+    ts_code = Column(String(32), nullable=False, index=True)
+    name = Column(String(64), nullable=True)
+    exchange = Column(String(8), nullable=True)
+    raw_json = Column(Text, nullable=True, comment="完整API响应JSON")
+
+    def __repr__(self):
+        return f"<RawMarginSecs({self.trade_date}, {self.ts_code})>"

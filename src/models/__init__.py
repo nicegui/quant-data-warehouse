@@ -15,17 +15,19 @@ from src.models.fundamental import (
     RawRepurchase, RawPledgeStat, RawPledgeDetail, RawStkHolderFloatTop,
     RawStkManagers, RawStkRewards,
 )
-from src.models.reference import RefStockBasic, RefTradeCal, RefAdjFactor, RawNewShare, RawNameChange, RefDisclosureDate
+from src.models.reference import RefStockBasic, RefTradeCal, RefAdjFactor, RawNewShare, RawNameChange, RefDisclosureDate, RawBakBasic
 from src.models.pipeline import PipelineLog
-from src.models.sentiment import RawTopInst, RawStkLimit, RawLimitList, RawTopList
+from src.models.sentiment import RawTopInst, RawStkLimit, RawLimitList, RawTopList, RawCyqChips, RawCyqPerf
 from src.models.moneyflow import (
     RawMoneyflow, RawMoneyflowMktDc, RawHsgtTop10, RawGgtTop10,
     RawMarginDetail, RawMarginTotal, RawMoneyflowHsgt, RawGgtDaily, RawGgtMonthly, RefHsConst,
+    RawMarginSecs,
 )
 from src.models.index import (
     RawIndexDaily, RawSwDaily, RefConcept, RefConceptDetail,
     RawIndexWeight, RefIndexBasic, RefIndexClassify,
 )
+from src.models.dc_index import RawDcIndex
 from src.models.macro import (
     RawCnCpi, RawCnPmi, RawCnGdp, RawCnMoneySupply,
     RawShibor, RawCnPpi, RawSfMonth, RawYieldCurve,
@@ -42,6 +44,11 @@ from src.models.rate import RawShiborLpr, RawShiborQuote, RawLibor, RawHibor, Ra
 from src.models.events import RawEcoCal, RefBrokerRecommend
 from src.models.bond import RawBondDaily, RawYcCb, RawBondBlk
 from src.models.ths import RawThsDaily, RawThsHot
+from src.models.akshare_macro import (
+    RawAkshareCpi, RawAksharePmi, RawAkshareGdp,
+    RawAkshareMoneySupply, RawAkshareHsgtHist,
+)
+from src.models.baostock import RefBaostockBasic
 
 __all__ = [
     "Base", "TimestampMixin",
@@ -55,7 +62,7 @@ __all__ = [
     "RawExpress", "RawBalanceSheet", "RawCashFlow",
     "RefStockBasic", "RefTradeCal", "RefAdjFactor", "RawNewShare", "RawNameChange", "RefDisclosureDate",
     "PipelineLog",
-    "RawTopInst", "RawStkLimit", "RawLimitList", "RawTopList",
+    "RawTopInst", "RawStkLimit", "RawLimitList", "RawTopList", "RawCyqChips", "RawCyqPerf",
     "RawMoneyflow", "RawMoneyflowMktDc", "RawHsgtTop10", "RawGgtTop10", "RawMarginDetail", "RawMarginTotal", "RawMoneyflowHsgt", "RawGgtDaily",
     "RawIndexDaily", "RawSwDaily", "RefConcept", "RefConceptDetail", "RawIndexWeight", "RefIndexBasic", "RefIndexClassify",
     "RawCnCpi", "RawCnPmi", "RawCnGdp", "RawCnMoneySupply", "RawShibor", "RawCnPpi", "RawSfMonth", "RawYieldCurve",
@@ -73,4 +80,8 @@ __all__ = [
     "RawEcoCal", "RefBrokerRecommend",
     "RawStkSurv", "RawStkManagers", "RawStkRewards", "RawFundManager",
     "RawGgtMonthly", "RefHsConst",
+    "RawDcIndex", "RawMarginSecs", "RawBakBasic",
+    "RawAkshareCpi", "RawAksharePmi", "RawAkshareGdp",
+    "RawAkshareMoneySupply", "RawAkshareHsgtHist",
+    "RefBaostockBasic",
 ]
