@@ -56,6 +56,11 @@ from src.collectors.impl.share_float import ShareFloatCollector
 from src.collectors.impl.namechange import NameChangeCollector
 from src.collectors.impl.cctv_news import CctvNewsCollector
 from src.collectors.impl.ths import ThsCollector
+from src.collectors.impl.block_trade import BlockTradeCollector
+from src.collectors.impl.new_share import NewShareCollector
+from src.collectors.impl.fina_audit import FinaAuditCollector
+from src.collectors.impl.fina_mainbz import FinaMainbzCollector
+from src.collectors.impl.us_stock import UsStockCollector
 
 __all__ = [
     "StockDailyCollector",
@@ -110,5 +115,6 @@ __all__ = [
     "ShareFloatCollector",
     "NameChangeCollector",
     "CctvNewsCollector",
-    "ThsCollector",
+    "ThsCollector", "BlockTradeCollector", "NewShareCollector",
+    "FinaAuditCollector", "FinaMainbzCollector", "UsStockCollector",
 ]
