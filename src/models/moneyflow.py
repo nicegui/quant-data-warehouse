@@ -108,9 +108,11 @@ class RawMarginTotal(TimestampMixin, Base):
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     trade_date = Column(String(8), nullable=False, index=True, unique=True)
+    exchange_id = Column(String(8), nullable=True)  # 交易所: SSE/SZSE/BSE
     rzye = Column(Float)            # 融资余额（元）
     rzmre = Column(Float)           # 融资买入额（元）
     rzche = Column(Float)           # 融资偿还额（元）
     rqye = Column(Float)            # 融券余额（元）
     rqmcl = Column(Float)           # 融券卖出量（股）
     rzrqye = Column(Float)          # 融资融券余额（元）
+    rqyl = Column(Float, nullable=True)  # 融券余量（股）

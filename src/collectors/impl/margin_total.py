@@ -39,12 +39,14 @@ class MarginTotalCollector(BaseTushareCollector):
         for row in raw:
             validated.append({
                 "trade_date": row.get("trade_date"),
+                "exchange_id": row.get("exchange_id", ""),
                 "rzye": _f(row.get("rzye"), 0),
                 "rzmre": _f(row.get("rzmre"), 0),
                 "rzche": _f(row.get("rzche"), 0),
                 "rqye": _f(row.get("rqye"), 0),
                 "rqmcl": _f(row.get("rqmcl"), 0),
                 "rzrqye": _f(row.get("rzrqye"), 0),
+                "rqyl": _f(row.get("rqyl"), 0),
             })
         return validated
 
