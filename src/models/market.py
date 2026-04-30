@@ -182,3 +182,31 @@ class RawDailyBasic(TimestampMixin, Base):
     raw_json: Mapped[Optional[str]] = mapped_column(
         String, nullable=True, comment="完整API响应JSON"
     )
+
+
+class RawStkMins(TimestampMixin, Base):
+    """股票分钟行情 (stk_mins).
+
+    Source: Tushare stk_mins API
+    1-min / 5-min / 15-min / 30-min / 60-min bars.
+    Rate-limited at 2 calls/min — pull selectively.
+    """
+    __tablename__ = "raw_stk_mins"
+    __table_args__ = (
+        {"comment": "股票分钟行情 — 5min K线，2次/分钟限流"}
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    trade_time: Mapped[Optional[str]] = mapped_column(
+        String(19), nullable=True, index=True, comment="交易时间 YYYY-MM-DD HH:MM:SS"
+    )
+    open: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    high: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    low: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    vol: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="成交量")
+    amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="成交额")
+
+    def __repr__(self):
+        return f"<RawStkMins({self.ts_code}, {self.trade_time})>"

@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from typing import Optional
+
 from sqlalchemy import Column, String, Float, BigInteger
+from sqlalchemy.orm import Mapped, mapped_column
+
 from src.models.base import TimestampMixin, Base
 
 
@@ -62,3 +66,28 @@ class RefConceptDetail(TimestampMixin, Base):
     ts_code = Column(String(32), nullable=False, index=True)
     name = Column(String(64))
     weight = Column(Float)           # 权重
+
+
+class RawIndexWeight(TimestampMixin, Base):
+    """指数成分权重 (index_weight).
+
+    Source: Tushare index_weight API
+    Monthly weight data for each constituent stock in a given index.
+    """
+    __tablename__ = "raw_index_weight"
+    __table_args__ = (
+        {"comment": "指数成分权重 — 月度数据"}
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    index_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    con_code: Mapped[str] = mapped_column(String(16), nullable=False, comment="成分股代码")
+    trade_date: Mapped[Optional[str]] = mapped_column(
+        String(8), nullable=True, comment="权重日期"
+    )
+    weight: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="权重(%)"
+    )
+
+    def __repr__(self):
+        return f"<RawIndexWeight({self.index_code}, {self.con_code}, {self.trade_date})>"
