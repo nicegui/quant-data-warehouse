@@ -13,6 +13,11 @@ class IndexMonthlyCollector(BaseTushareCollector):
         p={}
         if ts_code:p["ts_code"]=ts_code
         if trade_date:p["trade_date"]=trade_date
+        if start_date:p["start_date"]=start_date
+        if end_date:p["end_date"]=end_date
+        if not p:
+            from datetime import date, timedelta
+            p["trade_date"]=(date.today()-timedelta(days=1)).strftime("%Y%m%d")
         return self.api_call("index_monthly",**p)
     def validate(self, raw):
         r=[]

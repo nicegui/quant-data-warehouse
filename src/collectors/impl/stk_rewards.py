@@ -12,6 +12,7 @@ class StkRewardsCollector(BaseTushareCollector):
     def fetch(self, ts_code="", end_date="", **kw):
         p={}
         if ts_code:p["ts_code"]=ts_code
+        else: p["ts_code"]="000001.SZ"
         if end_date:p["end_date"]=end_date
         return self.api_call("stk_rewards",**p)
     def validate(self, raw):

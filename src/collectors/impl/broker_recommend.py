@@ -11,6 +11,10 @@ class BrokerRecommendCollector(BaseTushareCollector):
     def fetch(self, month="", **kw):
         p={}
         if month:p["month"]=month
+        else:
+            from datetime import date
+            from dateutil.relativedelta import relativedelta
+            p["month"]=(date.today()-relativedelta(months=1)).strftime("%Y%m")
         return self.api_call("broker_recommend",**p)
     def validate(self, raw):
         r=[]
