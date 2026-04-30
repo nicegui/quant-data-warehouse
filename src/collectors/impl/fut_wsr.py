@@ -25,6 +25,9 @@ class FutWsrCollector(BaseTushareCollector):
 
     def fetch(self, trade_date: str = "", symbol: str = "", **kwargs) -> list[dict]:
         params: dict[str, Any] = {}
+        if not (trade_date or symbol):
+            from datetime import date, timedelta
+            trade_date = (date.today() - timedelta(days=1)).strftime("%Y%m%d")
         if trade_date:
             params["trade_date"] = trade_date
         if symbol:

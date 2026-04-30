@@ -20,6 +20,8 @@ class SuspendCollector(BaseTushareCollector):
 
     def fetch(self, ts_code: str = "", suspend_type: str = "", **kwargs) -> list[dict]:
         params: dict[str, Any] = {}
+        if not (ts_code or suspend_type):
+            ts_code = "000001.SZ"
         if ts_code:
             params["ts_code"] = ts_code
         if suspend_type:

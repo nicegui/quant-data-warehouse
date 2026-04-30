@@ -26,6 +26,8 @@ class FinancialIndicatorCollector(BaseTushareCollector):
 
     def fetch(self, end_date: str = "", ts_code: str = "", **kwargs) -> list[dict]:
         params = {}
+        if not (ts_code or end_date):
+            ts_code = "000001.SZ"
         if ts_code:
             params["ts_code"] = ts_code
         if end_date:

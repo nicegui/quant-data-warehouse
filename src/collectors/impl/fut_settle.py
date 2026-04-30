@@ -25,6 +25,9 @@ class FutSettleCollector(BaseTushareCollector):
     def fetch(self, trade_date: str = "", ts_code: str = "",
               start_date: str = "", end_date: str = "", **kwargs) -> list[dict]:
         params: dict[str, Any] = {}
+        if not (trade_date or ts_code):
+            from datetime import date, timedelta
+            trade_date = (date.today() - timedelta(days=1)).strftime("%Y%m%d")
         if trade_date:
             params["trade_date"] = trade_date
         if ts_code:

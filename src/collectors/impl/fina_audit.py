@@ -26,6 +26,8 @@ class FinaAuditCollector(BaseTushareCollector):
 
     def fetch(self, ts_code: str = "", end_date: str = "", **kwargs) -> list[dict]:
         params: dict[str, Any] = {}
+        if not (ts_code or end_date):
+            ts_code = "000001.SZ"
         if ts_code:
             params["ts_code"] = ts_code
         if end_date:

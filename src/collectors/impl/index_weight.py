@@ -24,6 +24,8 @@ class IndexWeightCollector(BaseTushareCollector):
     def fetch(self, index_code: str = "", trade_date: str = "",
               start_date: str = "", end_date: str = "", **kwargs) -> list[dict]:
         params: dict[str, Any] = {}
+        if not (index_code or trade_date):
+            index_code = "000300.SH"
         if index_code:
             params["index_code"] = index_code
         if trade_date:

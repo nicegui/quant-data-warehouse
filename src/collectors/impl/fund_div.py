@@ -24,6 +24,9 @@ class FundDivCollector(BaseTushareCollector):
 
     def fetch(self, ts_code: str = "", ann_date: str = "", **kwargs) -> list[dict]:
         params: dict[str, Any] = {}
+        if not (ts_code or ann_date):
+            from datetime import date, timedelta
+            ann_date = (date.today() - timedelta(days=30)).strftime("%Y%m%d")
         if ts_code:
             params["ts_code"] = ts_code
         if ann_date:
