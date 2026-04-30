@@ -25,12 +25,62 @@ class RawStockDaily(TimestampMixin, Base):
     """A-share daily OHLCV — raw API response, immutable."""
     __tablename__ = "raw_stock_daily"
     __table_args__ = (
+        UniqueConstraint("ts_code", "trade_date", name="uq_raw_stock_daily_code_date"),
         {"comment": "A股日线 — 原始API返回，不可变"},
     )
 
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    trade_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    open: Mapped[float] = mapped_column(Float, nullable=False)
+    high: Mapped[float] = mapped_column(Float, nullable=False)
+    low: Mapped[float] = mapped_column(Float, nullable=False)
+    close: Mapped[float] = mapped_column(Float, nullable=False)
+    pre_close: Mapped[float] = mapped_column(Float, nullable=False)
+    change: Mapped[float] = mapped_column(Float, nullable=False)
+    pct_chg: Mapped[float] = mapped_column(Float, nullable=False)
+    vol: Mapped[float] = mapped_column(Float, nullable=False, comment="成交量(手)")
+    amount: Mapped[float] = mapped_column(Float, nullable=False, comment="成交额(千元)")
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, comment="完整API响应JSON"
+    )
+
+
+class RawStockWeekly(TimestampMixin, Base):
+    """A-share weekly OHLCV — raw API response, immutable."""
+    __tablename__ = "raw_stock_weekly"
     __table_args__ = (
-        UniqueConstraint("ts_code", "trade_date", name="uq_raw_stock_daily_code_date"),
-        {"comment": "A股日线 — 原始API返回，不可变"},
+        UniqueConstraint("ts_code", "trade_date", name="uq_raw_stock_weekly_code_date"),
+        {"comment": "A股周线 — 原始API返回，不可变"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    trade_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    open: Mapped[float] = mapped_column(Float, nullable=False)
+    high: Mapped[float] = mapped_column(Float, nullable=False)
+    low: Mapped[float] = mapped_column(Float, nullable=False)
+    close: Mapped[float] = mapped_column(Float, nullable=False)
+    pre_close: Mapped[float] = mapped_column(Float, nullable=False)
+    change: Mapped[float] = mapped_column(Float, nullable=False)
+    pct_chg: Mapped[float] = mapped_column(Float, nullable=False)
+    vol: Mapped[float] = mapped_column(Float, nullable=False, comment="成交量(手)")
+    amount: Mapped[float] = mapped_column(Float, nullable=False, comment="成交额(千元)")
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, comment="完整API响应JSON"
+    )
+
+
+class RawStockMonthly(TimestampMixin, Base):
+    """A-share monthly OHLCV — raw API response, immutable."""
+    __tablename__ = "raw_stock_monthly"
+    __table_args__ = (
+        UniqueConstraint("ts_code", "trade_date", name="uq_raw_stock_monthly_code_date"),
+        {"comment": "A股月线 — 原始API返回，不可变"},
     )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
@@ -215,3 +265,54 @@ class RawStkMins(TimestampMixin, Base):
 
     def __repr__(self):
         return f"<RawStkMins({self.ts_code}, {self.trade_time})>"
+
+
+class RawStkFactor(TimestampMixin, Base):
+    """股票因子 (stk_factor) — OHLCV + 估值/换手率/市值等.
+
+    Source: Tushare stk_factor API
+    Fields: ts_code, trade_date, open, high, low, close, pre_close,
+            change, pct_chg, vol, amount, adj_factor, turnover_rate,
+            turnover_rate_f, volume_ratio, pe, pe_ttm, pb, ps, ps_ttm,
+            dv_ratio, dv_ttm, total_share, float_share, free_share,
+            total_mv, circ_mv
+    """
+    __tablename__ = "raw_stk_factor"
+    __table_args__ = (
+        UniqueConstraint("ts_code", "trade_date", name="uq_raw_stk_factor_code_date"),
+        {"comment": "股票因子 — OHLCV + 估值指标 + 换手率 + 市值"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    trade_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    open: Mapped[float] = mapped_column(Float, nullable=False)
+    high: Mapped[float] = mapped_column(Float, nullable=False)
+    low: Mapped[float] = mapped_column(Float, nullable=False)
+    close: Mapped[float] = mapped_column(Float, nullable=False)
+    pre_close: Mapped[float] = mapped_column(Float, nullable=False)
+    change: Mapped[float] = mapped_column(Float, nullable=False)
+    pct_chg: Mapped[float] = mapped_column(Float, nullable=False)
+    vol: Mapped[float] = mapped_column(Float, nullable=False, comment="成交量(手)")
+    amount: Mapped[float] = mapped_column(Float, nullable=False, comment="成交额(千元)")
+    adj_factor: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="复权因子")
+    turnover_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="换手率(%)")
+    turnover_rate_f: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="自由流通股换手率(%)")
+    volume_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="量比")
+    pe: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="市盈率(静态)")
+    pe_ttm: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="市盈率(TTM)")
+    pb: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="市净率")
+    ps: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="市销率")
+    ps_ttm: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="市销率(TTM)")
+    dv_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="股息率(%)")
+    dv_ttm: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="股息率(TTM)")
+    total_share: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="总股本(万股)")
+    float_share: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="流通股本(万股)")
+    free_share: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="自由流通股本(万股)")
+    total_mv: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="总市值(万元)")
+    circ_mv: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="流通市值(万元)")
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, comment="完整API响应JSON"
+    )

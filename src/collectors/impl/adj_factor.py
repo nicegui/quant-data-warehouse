@@ -1,55 +1,56 @@
 """复权因子 — AdjFactorCollector
 
-Forward adjustment factor collector for split/dividend adjustments.
+Tushare adj_factor API.
 """
 
 from __future__ import annotations
 
+from datetime import datetime as dt
 from typing import Any
 
 from src.db.session import db_session
 from src.models.reference import RefAdjFactor
 from src.collectors.base import BaseTushareCollector
+from src.collectors.impl._utils import _f
 
 
 class AdjFactorCollector(BaseTushareCollector):
-    """Forward adjustment factor collector."""
+    """复权因子 collector."""
 
     def __init__(self, token: str):
         super().__init__("adj_factor", token)
 
-    def fetch(self, **kwargs) -> list[dict[str, Any]]:
-        params = {}
-        start_date = kwargs.get("start_date", "20000101")
-        trade_date = kwargs.get("trade_date")
-        if trade_date:
-            params["trade_date"] = trade_date
-        else:
-            params["start_date"] = start_date
+    @property
+    def checkpoint_key(self):
+        return "trade_date"
+
+    def fetch(self, trade_date: str = "", ts_code: str = "", **kwargs) -> list[dict]:
+        td = trade_date or dt.now().strftime("%Y%m%d")
+        params = {"trade_date": td}
+        if ts_code:
+            params["ts_code"] = ts_code
         return self.api_call("adj_factor", **params)
 
-    def validate(self, raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def validate(self, raw: list[dict]) -> list[dict]:
         validated = []
         for row in raw:
             validated.append({
                 "ts_code": row.get("ts_code", ""),
                 "trade_date": row.get("trade_date"),
-                "adj_factor": float(row.get("adj_factor", 1)),
+                "adj_factor": _f(row.get("adj_factor"), 1.0),
             })
         return validated
 
-    def store_raw(self, records: list[dict[str, Any]]) -> int:
-        """Upsert adj factors."""
+    def store_raw(self, records: list[dict]) -> int:
         written = 0
         with db_session() as session:
             for rec in records:
-                existing = session.query(RefAdjFactor).filter(
-                    RefAdjFactor.ts_code == rec["ts_code"],
-                    RefAdjFactor.trade_date == rec["trade_date"],
+                existing = session.query(RefAdjFactor).filter_by(
+                    ts_code=rec["ts_code"],
+                    trade_date=rec["trade_date"],
                 ).first()
                 if existing:
-                    existing.adj_factor = rec["adj_factor"]
-                else:
-                    session.add(RefAdjFactor(**rec))
+                    continue
+                session.add(RefAdjFactor(**rec))
                 written += 1
         return written

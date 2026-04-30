@@ -6,9 +6,10 @@ fut_daily + fut_holding from Tushare API.
 from __future__ import annotations
 
 from typing import Any
+from datetime import datetime as dt
 
 from src.db.session import db_session
-from src.models.futures import RawFutDaily
+from src.models.futures import RawFutDaily, RawFutHolding
 from src.collectors.base import BaseTushareCollector
 from src.collectors.impl._utils import _f
 
@@ -19,9 +20,11 @@ class FuturesCollector(BaseTushareCollector):
     def __init__(self, token: str):
         super().__init__("futures", token)
 
-    def fetch(self, trade_date: str = "", **kwargs) -> list[dict]:
-        from datetime import datetime as dt
+    @property
+    def checkpoint_key(self):
+        return "trade_date"
 
+    def fetch(self, trade_date: str = "", **kwargs) -> list[dict]:
         td = trade_date or dt.now().strftime("%Y%m%d")
         return self.api_call("fut_daily", trade_date=td)
 
@@ -58,5 +61,29 @@ class FuturesCollector(BaseTushareCollector):
                 if existing:
                     continue
                 session.add(RawFutDaily(**rec))
+                written += 1
+        return written
+
+    # ── 期货会员持仓 (separate fetch, not using run()) ──
+
+    def fetch_fut_holding(self, trade_date: str = "", symbol: str = "") -> list[dict]:
+        td = trade_date or dt.now().strftime("%Y%m%d")
+        params = {"trade_date": td}
+        if symbol:
+            params["symbol"] = symbol
+        return self.api_call("fut_holding", **params)
+
+    def store_fut_holding(self, records: list[dict]) -> int:
+        written = 0
+        with db_session() as session:
+            for rec in records:
+                existing = session.query(RawFutHolding).filter_by(
+                    trade_date=rec["trade_date"],
+                    symbol=rec["symbol"],
+                    broker=rec["broker"],
+                ).first()
+                if existing:
+                    continue
+                session.add(RawFutHolding(**rec))
                 written += 1
         return written

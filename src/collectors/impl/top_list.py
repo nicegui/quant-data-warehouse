@@ -1,6 +1,6 @@
-"""每日基本面 — DailyBasicCollector
+"""龙虎榜明细 — TopListCollector
 
-Tushare daily_basic API — PE/PB/换手率/市值.
+Tushare top_list API.
 """
 
 from __future__ import annotations
@@ -10,16 +10,16 @@ from datetime import datetime as dt
 from typing import Any
 
 from src.db.session import db_session
-from src.models.market import RawDailyBasic
+from src.models.sentiment import RawTopList
 from src.collectors.base import BaseTushareCollector
 from src.collectors.impl._utils import _f
 
 
-class DailyBasicCollector(BaseTushareCollector):
-    """每日基本面指标 collector."""
+class TopListCollector(BaseTushareCollector):
+    """龙虎榜明细 collector."""
 
     def __init__(self, token: str):
-        super().__init__("daily_basic", token)
+        super().__init__("top_list", token)
 
     @property
     def checkpoint_key(self):
@@ -30,30 +30,23 @@ class DailyBasicCollector(BaseTushareCollector):
         params = {"trade_date": td}
         if ts_code:
             params["ts_code"] = ts_code
-        return self.api_call("daily_basic", **params)
+        return self.api_call("top_list", **params)
 
     def validate(self, raw: list[dict]) -> list[dict]:
         validated = []
         for row in raw:
             validated.append({
-                "ts_code": row.get("ts_code", ""),
                 "trade_date": row.get("trade_date"),
-                "close": _f(row.get("close"), 0),
+                "ts_code": row.get("ts_code", ""),
+                "name": row.get("name"),
+                "reason": row.get("reason"),
+                "close_price": _f(row.get("close")),
+                "pct_chg": _f(row.get("pct_change")),
                 "turnover_rate": _f(row.get("turnover_rate")),
-                "turnover_rate_f": _f(row.get("turnover_rate_f")),
-                "volume_ratio": _f(row.get("volume_ratio")),
-                "pe": _f(row.get("pe")),
-                "pe_ttm": _f(row.get("pe_ttm")),
-                "pb": _f(row.get("pb")),
-                "ps": _f(row.get("ps")),
-                "ps_ttm": _f(row.get("ps_ttm")),
-                "dv_ratio": _f(row.get("dv_ratio")),
-                "dv_ttm": _f(row.get("dv_ttm")),
-                "total_mv": _f(row.get("total_mv")),
-                "circ_mv": _f(row.get("circ_mv")),
-                "total_share": _f(row.get("total_share")),
-                "float_share": _f(row.get("float_share")),
-                "free_share": _f(row.get("free_share")),
+                "total_amount": _f(row.get("amount")),
+                "net_amount": _f(row.get("net_amount")),
+                "buy_amount": _f(row.get("buy_amount")),
+                "sell_amount": _f(row.get("sell_amount")),
                 "raw_json": json.dumps(row, ensure_ascii=False, default=str),
             })
         return validated
@@ -62,12 +55,12 @@ class DailyBasicCollector(BaseTushareCollector):
         written = 0
         with db_session() as session:
             for rec in records:
-                existing = session.query(RawDailyBasic).filter_by(
+                existing = session.query(RawTopList).filter_by(
                     ts_code=rec["ts_code"],
                     trade_date=rec["trade_date"],
                 ).first()
                 if existing:
                     continue
-                session.add(RawDailyBasic(**rec))
+                session.add(RawTopList(**rec))
                 written += 1
         return written

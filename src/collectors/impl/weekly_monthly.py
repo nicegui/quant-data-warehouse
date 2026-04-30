@@ -1,6 +1,6 @@
-"""A股日线 — StockDailyCollector
+"""周线/月线 — WeeklyMonthlyCollector
 
-Tushare daily API — 逐日行情数据 (OHLCV).
+Tushare weekly / monthly API — 周线/月线行情数据 (OHLCV).
 """
 
 from __future__ import annotations
@@ -10,16 +10,39 @@ from datetime import datetime as dt
 from typing import Any
 
 from src.db.session import db_session
-from src.models.market import RawStockDaily
+from src.models.market import RawStockWeekly, RawStockMonthly
 from src.collectors.base import BaseTushareCollector
 from src.collectors.impl._utils import _f
 
 
-class StockDailyCollector(BaseTushareCollector):
-    """A股日线行情 collector."""
+class WeeklyMonthlyCollector(BaseTushareCollector):
+    """A股周线/月线行情 collector.
 
-    def __init__(self, token: str):
-        super().__init__("stock_daily", token)
+    Supports both weekly ('W') and monthly ('M') frequencies.
+    Pass freq='W' or freq='M' to the constructor.
+    """
+
+    FREQ_CONFIG = {
+        "W": {
+            "api": "weekly",
+            "model": RawStockWeekly,
+            "label": "stock_weekly",
+        },
+        "M": {
+            "api": "monthly",
+            "model": RawStockMonthly,
+            "label": "stock_monthly",
+        },
+    }
+
+    def __init__(self, token: str, freq: str = "W"):
+        if freq not in self.FREQ_CONFIG:
+            raise ValueError(f"freq must be 'W' or 'M', got {freq!r}")
+        self.freq = freq
+        cfg = self.FREQ_CONFIG[freq]
+        super().__init__(cfg["label"], token)
+        self._api_name = cfg["api"]
+        self._model = cfg["model"]
 
     @property
     def checkpoint_key(self):
@@ -30,7 +53,7 @@ class StockDailyCollector(BaseTushareCollector):
         params = {"trade_date": td}
         if ts_code:
             params["ts_code"] = ts_code
-        return self.api_call("daily", **params)
+        return self.api_call(self._api_name, **params)
 
     def validate(self, raw: list[dict]) -> list[dict]:
         validated = []
@@ -55,12 +78,12 @@ class StockDailyCollector(BaseTushareCollector):
         written = 0
         with db_session() as session:
             for rec in records:
-                existing = session.query(RawStockDaily).filter_by(
+                existing = session.query(self._model).filter_by(
                     ts_code=rec["ts_code"],
                     trade_date=rec["trade_date"],
                 ).first()
                 if existing:
                     continue
-                session.add(RawStockDaily(**rec))
+                session.add(self._model(**rec))
                 written += 1
         return written

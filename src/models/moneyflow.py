@@ -96,3 +96,21 @@ class RawMarginDetail(TimestampMixin, Base):
     rqye = Column(Float)            # 融券余额（元）
     rqmcl = Column(Float)           # 融券卖出量（股）
     rzrqye = Column(Float)          # 融资融券余额（元）
+
+
+class RawMarginTotal(TimestampMixin, Base):
+    """融资融券总量 (margin) — 大盘汇总，非个股明细.
+
+    Source: Tushare margin API (not margin_detail)
+    Fields: trade_date, rzye, rzmre, rzche, rqye, rqmcl, rzrqye
+    """
+    __tablename__ = "raw_margin_total"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    trade_date = Column(String(8), nullable=False, index=True, unique=True)
+    rzye = Column(Float)            # 融资余额（元）
+    rzmre = Column(Float)           # 融资买入额（元）
+    rzche = Column(Float)           # 融资偿还额（元）
+    rqye = Column(Float)            # 融券余额（元）
+    rqmcl = Column(Float)           # 融券卖出量（股）
+    rzrqye = Column(Float)          # 融资融券余额（元）

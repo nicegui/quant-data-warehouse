@@ -27,6 +27,23 @@ from src.collectors.impl.index_daily import IndexCollector
 from src.collectors.impl.macro import MacroCollector
 from src.collectors.impl.futures import FuturesCollector
 from src.collectors.impl.fund import FundCollector
+from src.collectors.impl.margin import MarginCollector
+from src.collectors.impl.stk_mins import StkMinsCollector
+from src.collectors.impl.major_news import MajorNewsCollector
+from src.collectors.impl.trade_cal import TradeCalCollector
+from src.collectors.impl.limit_list import LimitListCollector
+from src.collectors.impl.top_list import TopListCollector
+from src.collectors.impl.suspend_d import SuspendDCollector
+from src.collectors.impl.dividend import DividendCollector
+from src.collectors.impl.express import ExpressCollector
+from src.collectors.impl.balance_sheet import BalanceSheetCollector
+from src.collectors.impl.cash_flow import CashFlowCollector
+from src.collectors.impl.hk_daily import HkDailyCollector
+from src.collectors.impl.cb_daily import CbDailyCollector
+from src.collectors.impl.forecast import ForecastCollector
+from src.collectors.impl.weekly_monthly import WeeklyMonthlyCollector
+from src.collectors.impl.margin_total import MarginTotalCollector
+from src.collectors.impl.stk_factor import StkFactorCollector
 
 
 __all__ = [
@@ -45,4 +62,21 @@ __all__ = [
     "MacroCollector",
     "FuturesCollector",
     "FundCollector",
+    "MarginCollector",
+    "StkMinsCollector",
+    "MajorNewsCollector",
+    "TradeCalCollector",
+    "LimitListCollector",
+    "TopListCollector",
+    "SuspendDCollector",
+    "DividendCollector",
+    "ExpressCollector",
+    "BalanceSheetCollector",
+    "CashFlowCollector",
+    "HkDailyCollector",
+    "CbDailyCollector",
+    "ForecastCollector",
+    "WeeklyMonthlyCollector",
+    "MarginTotalCollector",
+    "StkFactorCollector",
 ]

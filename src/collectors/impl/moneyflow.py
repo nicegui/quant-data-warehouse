@@ -10,6 +10,7 @@ from typing import Any
 from src.db.session import db_session
 from src.models.moneyflow import (
     RawMoneyflow,
+    RawMoneyflowMktDc,
     RawHsgtTop10,
     RawGgtTop10,
     RawMarginDetail,
@@ -40,6 +41,26 @@ class MoneyflowCollector(BaseTushareCollector):
                 written += 1
         return written
 
+    # ── 大盘资金流向 ──
+
+    def fetch_moneyflow_mkt_dc(self, trade_date: str) -> list[dict]:
+        return self.api_call("moneyflow_mkt_dc", trade_date=trade_date)
+
+    def store_moneyflow_mkt_dc(self, records: list[dict]) -> int:
+        written = 0
+        with db_session() as session:
+            for rec in records:
+                existing = session.query(RawMoneyflowMktDc).filter_by(
+                    trade_date=rec["trade_date"],
+                ).first()
+                if existing:
+                    continue
+                session.add(RawMoneyflowMktDc(**rec))
+                written += 1
+        return written
+
+    # ── 沪深股通十大成交 ──
+
     def fetch_hsgt_top10(self, trade_date: str) -> list[dict]:
         return self.api_call("hsgt_top10", trade_date=trade_date)
 
@@ -57,6 +78,8 @@ class MoneyflowCollector(BaseTushareCollector):
                 written += 1
         return written
 
+    # ── 港股通十大成交 ──
+
     def fetch_ggt_top10(self, trade_date: str) -> list[dict]:
         return self.api_call("ggt_top10", trade_date=trade_date)
 
@@ -73,6 +96,8 @@ class MoneyflowCollector(BaseTushareCollector):
                 session.add(RawGgtTop10(**rec))
                 written += 1
         return written
+
+    # ── 融资融券明细 ──
 
     def fetch_margin_detail(self, trade_date: str) -> list[dict]:
         return self.api_call("margin_detail", trade_date=trade_date)

@@ -1,6 +1,7 @@
 """宏观经济 — MacroCollector
 
-cpi/pmi/gdp/m2/shibor from Tushare API.
+Tushare multi-API: cn_cpi, cn_pmi, cn_gdp, cn_m, shibor.
+Each API has its own fetch/store — checkpoint per API via base class.
 """
 
 from __future__ import annotations
@@ -8,8 +9,11 @@ from __future__ import annotations
 from typing import Any
 
 from src.db.session import db_session
-from src.models.macro import RawCnCpi, RawCnPmi, RawCnGdp, RawCnMoneySupply, RawShibor
+from src.models.macro import (
+    RawCnCpi, RawCnPmi, RawCnGdp, RawCnMoneySupply, RawShibor,
+)
 from src.collectors.base import BaseTushareCollector
+from src.collectors.impl._utils import _f
 
 
 class MacroCollector(BaseTushareCollector):
@@ -18,80 +22,84 @@ class MacroCollector(BaseTushareCollector):
     def __init__(self, token: str):
         super().__init__("macro", token)
 
-    def fetch_cpi(self) -> list[dict]:
-        return self.api_call("cn_cpi")
+    @property
+    def checkpoint_key(self):
+        return "year"  # macro data is yearly/monthly
+
+    # ── CPI ──
+
+    def fetch_cpi(self, start_m: str = "", end_m: str = "", **kwargs) -> list[dict]:
+        return self.api_call("cn_cpi", m=end_m) if end_m else self.api_call("cn_cpi")
 
     def store_cpi(self, records: list[dict]) -> int:
         written = 0
         with db_session() as session:
             for rec in records:
-                existing = session.query(RawCnCpi).filter_by(
-                    month=rec["month"]
-                ).first()
+                existing = session.query(RawCnCpi).filter_by(month=rec.get("month")).first()
                 if existing:
                     continue
                 session.add(RawCnCpi(**rec))
                 written += 1
         return written
 
-    def fetch_pmi(self) -> list[dict]:
-        return self.api_call("cn_pmi")
+    # ── PMI ──
+
+    def fetch_pmi(self, start_m: str = "", end_m: str = "", **kwargs) -> list[dict]:
+        return self.api_call("cn_pmi", m=end_m) if end_m else self.api_call("cn_pmi")
 
     def store_pmi(self, records: list[dict]) -> int:
         written = 0
         with db_session() as session:
             for rec in records:
-                existing = session.query(RawCnPmi).filter_by(
-                    month=rec["month"]
-                ).first()
+                existing = session.query(RawCnPmi).filter_by(month=rec.get("month")).first()
                 if existing:
                     continue
                 session.add(RawCnPmi(**rec))
                 written += 1
         return written
 
-    def fetch_gdp(self) -> list[dict]:
+    # ── GDP ──
+
+    def fetch_gdp(self, **kwargs) -> list[dict]:
         return self.api_call("cn_gdp")
 
     def store_gdp(self, records: list[dict]) -> int:
         written = 0
         with db_session() as session:
             for rec in records:
-                existing = session.query(RawCnGdp).filter_by(
-                    quarter=rec["quarter"]
-                ).first()
+                existing = session.query(RawCnGdp).filter_by(quarter=rec.get("quarter")).first()
                 if existing:
                     continue
                 session.add(RawCnGdp(**rec))
                 written += 1
         return written
 
-    def fetch_money_supply(self) -> list[dict]:
-        return self.api_call("cn_m")
+    # ── Money Supply ──
+
+    def fetch_money_supply(self, start_m: str = "", end_m: str = "", **kwargs) -> list[dict]:
+        return self.api_call("cn_m", m=end_m) if end_m else self.api_call("cn_m")
 
     def store_money_supply(self, records: list[dict]) -> int:
         written = 0
         with db_session() as session:
             for rec in records:
-                existing = session.query(RawCnMoneySupply).filter_by(
-                    month=rec["month"]
-                ).first()
+                existing = session.query(RawCnMoneySupply).filter_by(month=rec.get("month")).first()
                 if existing:
                     continue
                 session.add(RawCnMoneySupply(**rec))
                 written += 1
         return written
 
-    def fetch_shibor(self) -> list[dict]:
-        return self.api_call("shibor")
+    # ── Shibor ──
+
+    def fetch_shibor(self, date: str = "", **kwargs) -> list[dict]:
+        return self.api_call("shibor", date=date) if date else self.api_call("shibor")
 
     def store_shibor(self, records: list[dict]) -> int:
         written = 0
         with db_session() as session:
             for rec in records:
-                existing = session.query(RawShibor).filter_by(
-                    date=rec["date"]
-                ).first()
+                existing = session.query(RawShibor).filter_by(date=rec.get("date")).first()
                 if existing:
                     continue
                 session.add(RawShibor(**rec))

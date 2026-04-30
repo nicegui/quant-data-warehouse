@@ -1,6 +1,6 @@
-"""财报 — FinancialReportCollector
+"""业绩预告 — ForecastCollector
 
-Tushare income/vf_income, balance_sheet, cashflow APIs.
+Tushare forecast API — 上市公司业绩预告数据.
 """
 
 from __future__ import annotations
@@ -9,28 +9,31 @@ import json
 from typing import Any
 
 from src.db.session import db_session
-from src.models.fundamental import RawFinancialReports
+from src.models.fundamental import RawForecast
 from src.collectors.base import BaseTushareCollector
 from src.collectors.impl._utils import _f
 
 
-class FinancialReportCollector(BaseTushareCollector):
-    """财务报表 collector (利润表/资产负债表/现金流量表)."""
+class ForecastCollector(BaseTushareCollector):
+    """业绩预告 collector."""
 
     def __init__(self, token: str):
-        super().__init__("financial_reports", token)
+        super().__init__("forecast", token)
 
     @property
     def checkpoint_key(self):
         return "end_date"
 
-    def fetch(self, end_date: str = "", ts_code: str = "", **kwargs) -> list[dict]:
+    def fetch(self, ts_code: str = "", end_date: str = "", ann_date: str = "",
+              **kwargs) -> list[dict]:
         params = {}
         if ts_code:
             params["ts_code"] = ts_code
         if end_date:
             params["end_date"] = end_date
-        return self.api_call("income", **params)
+        if ann_date:
+            params["ann_date"] = ann_date
+        return self.api_call("forecast", **params)
 
     def validate(self, raw: list[dict]) -> list[dict]:
         validated = []
@@ -38,16 +41,16 @@ class FinancialReportCollector(BaseTushareCollector):
             validated.append({
                 "ts_code": row.get("ts_code", ""),
                 "ann_date": row.get("ann_date"),
-                "f_ann_date": row.get("f_ann_date"),
                 "end_date": row.get("end_date"),
-                "report_type": row.get("report_type"),
-                "comp_type": row.get("comp_type"),
-                "total_revenue": _f(row.get("total_revenue")),
-                "revenue": _f(row.get("revenue")),
-                "oper_cost": _f(row.get("oper_cost")),
-                "total_profit": _f(row.get("total_profit")),
-                "n_income": _f(row.get("n_income")),
-                "n_income_attr_p": _f(row.get("n_income_attr_p")),
+                "type": row.get("type"),
+                "p_change_min": _f(row.get("p_change_min")),
+                "p_change_max": _f(row.get("p_change_max")),
+                "net_profit_min": _f(row.get("net_profit_min")),
+                "net_profit_max": _f(row.get("net_profit_max")),
+                "last_parent_net": _f(row.get("last_parent_net")),
+                "first_ann_date": row.get("first_ann_date"),
+                "summary": row.get("summary"),
+                "change_reason": row.get("change_reason"),
                 "raw_json": json.dumps(row, ensure_ascii=False, default=str),
             })
         return validated
@@ -56,13 +59,12 @@ class FinancialReportCollector(BaseTushareCollector):
         written = 0
         with db_session() as session:
             for rec in records:
-                existing = session.query(RawFinancialReports).filter_by(
+                existing = session.query(RawForecast).filter_by(
                     ts_code=rec["ts_code"],
                     end_date=rec["end_date"],
-                    report_type=rec.get("report_type"),
                 ).first()
                 if existing:
                     continue
-                session.add(RawFinancialReports(**rec))
+                session.add(RawForecast(**rec))
                 written += 1
         return written

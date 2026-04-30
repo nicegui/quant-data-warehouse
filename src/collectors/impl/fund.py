@@ -6,9 +6,10 @@ fund_daily + fund_portfolio from Tushare API.
 from __future__ import annotations
 
 from typing import Any
+from datetime import datetime as dt
 
 from src.db.session import db_session
-from src.models.fund import RawFundDaily
+from src.models.fund import RawFundDaily, RawFundPortfolio
 from src.collectors.base import BaseTushareCollector
 from src.collectors.impl._utils import _f
 
@@ -19,9 +20,11 @@ class FundCollector(BaseTushareCollector):
     def __init__(self, token: str):
         super().__init__("fund", token)
 
-    def fetch(self, trade_date: str = "", **kwargs) -> list[dict]:
-        from datetime import datetime as dt
+    @property
+    def checkpoint_key(self):
+        return "trade_date"
 
+    def fetch(self, trade_date: str = "", **kwargs) -> list[dict]:
         td = trade_date or dt.now().strftime("%Y%m%d")
         return self.api_call("fund_daily", trade_date=td)
 
@@ -54,5 +57,25 @@ class FundCollector(BaseTushareCollector):
                 if existing:
                     continue
                 session.add(RawFundDaily(**rec))
+                written += 1
+        return written
+
+    # ── 基金持仓 (separate fetch) ──
+
+    def fetch_fund_portfolio(self, ts_code: str) -> list[dict]:
+        return self.api_call("fund_portfolio", ts_code=ts_code)
+
+    def store_fund_portfolio(self, records: list[dict]) -> int:
+        written = 0
+        with db_session() as session:
+            for rec in records:
+                existing = session.query(RawFundPortfolio).filter_by(
+                    ts_code=rec["ts_code"],
+                    end_date=rec["end_date"],
+                    symbol=rec["symbol"],
+                ).first()
+                if existing:
+                    continue
+                session.add(RawFundPortfolio(**rec))
                 written += 1
         return written

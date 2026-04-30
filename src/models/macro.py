@@ -70,6 +70,7 @@ class RawShibor(TimestampMixin, Base):
     w1_rate = Column(Float)
     w1_bid = Column(Float)
     w2_rate = Column(Float)
+    w2_bid = Column(Float)         # 2周买价
     m1_rate = Column(Float)
     m3_rate = Column(Float)
     m6_rate = Column(Float)
