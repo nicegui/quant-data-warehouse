@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import BigInteger, DateTime, Float, String, Text
+from sqlalchemy import BigInteger, DateTime, Float, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -215,6 +215,64 @@ class RawForecast(TimestampMixin, Base):
     )
 
 
+
+
+class RawFinaAudit(TimestampMixin, Base):
+    """审计意见 (fina_audit).
+
+    Source: Tushare fina_audit API
+    Fields: ts_code, ann_date, end_date, audit_result, audit_fees,
+            audit_agency, audit_sign
+    """
+    __tablename__ = "raw_fina_audit"
+    __table_args__ = (
+        UniqueConstraint("ts_code", "end_date", "ann_date",
+                         name="uq_raw_fina_audit_code_date"),
+        {"comment": "审计意见 — 原始数据"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    ann_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="公告日期")
+    end_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="报告期")
+    audit_result: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, comment="审计意见")
+    audit_fees: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="审计费用(元)")
+    audit_agency: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, comment="审计机构")
+    audit_sign: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, comment="签字会计师")
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, comment="完整API响应JSON"
+    )
+
+
+class RawFinaMainbz(TimestampMixin, Base):
+    """主营业务构成 (fina_mainbz).
+
+    Source: Tushare fina_mainbz API
+    Fields: ts_code, end_date, bz_item, bz_code, bz_sales, bz_profit,
+            bz_cost, curr_type
+    Note: bz_code = P(产品)/S(地区); the API param is called 'type'.
+    """
+    __tablename__ = "raw_fina_mainbz"
+    __table_args__ = (
+        UniqueConstraint("ts_code", "end_date", "bz_item",
+                         name="uq_raw_fina_mainbz_code_item"),
+        {"comment": "主营业务构成 — 原始数据"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    end_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="报告期")
+    bz_item: Mapped[Optional[str]] = mapped_column(String(256), nullable=True, comment="业务项目")
+    bz_code: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="类型: P产品/S地区")
+    bz_sales: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="主营收入(元)")
+    bz_profit: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="主营利润(元)")
+    bz_cost: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="主营成本(元)")
+    curr_type: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="货币代码")
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, comment="完整API响应JSON"
+    )
+
+
 class RawStkHolderTrade(TimestampMixin, Base):
     """高管增减持 (stk_holdertrade) — 董监高持股变动.
 
@@ -270,6 +328,54 @@ class RawStkHolderTop(TimestampMixin, Base):
     raw_json: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True, comment="完整API响应JSON"
     )
+
+
+class RawRepurchase(TimestampMixin, Base):
+    """回购 (repurchase).
+
+    Source: Tushare repurchase API
+    Fields: ts_code, ann_date, end_date, proc, exp_date,
+            vol, amount, high_limit, low_limit
+    """
+    __tablename__ = "raw_repurchase"
+    __table_args__ = (
+        {"comment": "股票回购 — 原始数据"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    ann_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="公告日期")
+    end_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="截止日期")
+    proc: Mapped[Optional[str]] = mapped_column(String(16), nullable=True, comment="进度: 实施/完成")
+    exp_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="回购有效期")
+    vol: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="回购数量(股)")
+    amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="回购金额(元)")
+    high_limit: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="回购最高价")
+    low_limit: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="回购最低价")
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class RawPledgeStat(TimestampMixin, Base):
+    """质押统计 (pledge_stat).
+
+    Source: Tushare pledge_stat API
+    Fields: ts_code, end_date, pledge_count, unrest_pledge,
+            rest_pledge, total_share, pledge_ratio
+    """
+    __tablename__ = "raw_pledge_stat"
+    __table_args__ = (
+        {"comment": "质押统计 — 原始数据"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    end_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="统计日期")
+    pledge_count: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True, comment="质押总笔数")
+    unrest_pledge: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="无限售股质押数(万股)")
+    rest_pledge: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="限售股质押数(万股)")
+    total_share: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="总股本(万股)")
+    pledge_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="质押比例(%)")
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
 
 class CuratedFinancialReports(TimestampMixin, Base):

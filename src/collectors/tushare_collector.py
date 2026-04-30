@@ -44,63 +44,42 @@ from src.collectors.impl.forecast import ForecastCollector
 from src.collectors.impl.weekly_monthly import WeeklyMonthlyCollector
 from src.collectors.impl.margin_total import MarginTotalCollector
 from src.collectors.impl.stk_factor import StkFactorCollector
-
-# ── NEW (2026-05-01) ──
 from src.collectors.impl.holder_number import StkHolderNumberCollector
 from src.collectors.impl.holder import HolderCollector
 from src.collectors.impl.moneyflow_hsgt import MoneyflowHsgtCollector
 from src.collectors.impl.fund_basic import FundBasicCollector
 from src.collectors.impl.fund_nav import FundNavCollector
-
-# ── NEW (2026-04-30 - batch 3) ──
 from src.collectors.impl.index_basic import IndexBasicCollector
 from src.collectors.impl.ggt_daily import GgtDailyCollector
 from src.collectors.impl.cn_ppi import CnPpiCollector
 from src.collectors.impl.sf_month import SfMonthCollector
+from src.collectors.impl.repurchase import RepurchaseCollector
+from src.collectors.impl.pledge_stat import PledgeStatCollector
+from src.collectors.impl.fut_basic import FutBasicCollector
+from src.collectors.impl.fut_wsr import FutWsrCollector
+from src.collectors.impl.stk_account import StkAccountCollector
+from src.collectors.impl.share_float import ShareFloatCollector
+from src.collectors.impl.namechange import NameChangeCollector
+from src.collectors.impl.cctv_news import CctvNewsCollector
+from src.collectors.impl.ths import ThsCollector
 
 
 __all__ = [
-    "StockDailyCollector",
-    "StockBasicCollector",
-    "AdjFactorCollector",
-    "DailyBasicCollector",
-    "ConsultationCollector",
-    "FinancialReportCollector",
-    "FinancialIndicatorCollector",
-    "TopInstCollector",
-    "MoneyflowCollector",
-    "StkLimitCollector",
-    "ConceptCollector",
-    "IndexCollector",
-    "MacroCollector",
-    "FuturesCollector",
-    "FundCollector",
-    "MarginCollector",
-    "StkMinsCollector",
-    "MajorNewsCollector",
-    "TradeCalCollector",
-    "LimitListCollector",
-    "TopListCollector",
-    "SuspendDCollector",
-    "DividendCollector",
-    "ExpressCollector",
-    "BalanceSheetCollector",
-    "CashFlowCollector",
-    "HkDailyCollector",
-    "CbDailyCollector",
-    "ForecastCollector",
-    "WeeklyMonthlyCollector",
-    "MarginTotalCollector",
-    "StkFactorCollector",
-    # NEW (2026-05-01)
-    "StkHolderNumberCollector",
-    "HolderCollector",
-    "MoneyflowHsgtCollector",
-    "FundBasicCollector",
-    "FundNavCollector",
-    # NEW (2026-04-30 - batch 3)
-    "IndexBasicCollector",
-    "GgtDailyCollector",
-    "CnPpiCollector",
-    "SfMonthCollector",
+    "StockDailyCollector", "StockBasicCollector", "AdjFactorCollector",
+    "DailyBasicCollector", "ConsultationCollector", "FinancialReportCollector",
+    "FinancialIndicatorCollector", "TopInstCollector", "MoneyflowCollector",
+    "StkLimitCollector", "ConceptCollector", "IndexCollector",
+    "MacroCollector", "FuturesCollector", "FundCollector", "MarginCollector",
+    "StkMinsCollector", "MajorNewsCollector", "TradeCalCollector",
+    "LimitListCollector", "TopListCollector", "SuspendDCollector",
+    "DividendCollector", "ExpressCollector", "BalanceSheetCollector",
+    "CashFlowCollector", "HkDailyCollector", "CbDailyCollector",
+    "ForecastCollector", "WeeklyMonthlyCollector", "MarginTotalCollector",
+    "StkFactorCollector", "StkHolderNumberCollector", "HolderCollector",
+    "MoneyflowHsgtCollector", "FundBasicCollector", "FundNavCollector",
+    "IndexBasicCollector", "GgtDailyCollector", "CnPpiCollector",
+    "SfMonthCollector", "RepurchaseCollector", "PledgeStatCollector",
+    "FutBasicCollector", "FutWsrCollector", "StkAccountCollector",
+    "ShareFloatCollector", "NameChangeCollector", "CctvNewsCollector",
+    "ThsCollector",
 ]

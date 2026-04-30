@@ -48,3 +48,21 @@ class RawMajorNews(TimestampMixin, Base):
         String(16), nullable=True, comment="impact level"
     )
     raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class RawCctvNews(TimestampMixin, Base):
+    """新闻联播 (cctv_news).
+
+    Source: Tushare cctv_news API
+    Fields: date, title, content
+    """
+    __tablename__ = "raw_cctv_news"
+    __table_args__ = (
+        {"comment": "新闻联播 — 原始数据"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    date: Mapped[str] = mapped_column(String(8), nullable=False, index=True, comment="新闻日期")
+    title: Mapped[str] = mapped_column(String(512), nullable=False, comment="新闻标题")
+    content: Mapped[Optional[str]] = mapped_column(Text, nullable=True, comment="新闻内容")
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

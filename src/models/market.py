@@ -318,6 +318,34 @@ class RawStkFactor(TimestampMixin, Base):
     )
 
 
+class RawBlockTrade(TimestampMixin, Base):
+    """大宗交易 (block_trade).
+
+    Source: Tushare block_trade API
+    Fields: ts_code, trade_date, price, vol, amount, buyer, seller
+    """
+    __tablename__ = "raw_block_trade"
+    __table_args__ = (
+        UniqueConstraint("ts_code", "trade_date", "buyer", "seller",
+                         name="uq_raw_block_trade_code_date_buyer_seller"),
+        {"comment": "大宗交易 — 原始数据"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    trade_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    price: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="成交价")
+    vol: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="成交量(万股)")
+    amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="成交额(万元)")
+    buyer: Mapped[Optional[str]] = mapped_column(String(256), nullable=True, comment="买方营业部")
+    seller: Mapped[Optional[str]] = mapped_column(String(256), nullable=True, comment="卖方营业部")
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, comment="完整API响应JSON"
+    )
+
+
 class RawStkHolderNumber(TimestampMixin, Base):
     """股东户数 (stk_holdernumber).
 
@@ -336,6 +364,53 @@ class RawStkHolderNumber(TimestampMixin, Base):
     end_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="报告期")
     holder_num: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="股东户数")
     holder_num_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="股东户数变化率(%)")
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, comment="完整API响应JSON"
+    )
+
+
+class RawStkAccount(TimestampMixin, Base):
+    """股票开户数 (stk_account).
+
+    Source: Tushare stk_account API
+    Fields: date, weekly_new, total, weekly_hold, weekly_trade
+    """
+    __tablename__ = "raw_stk_account"
+    __table_args__ = (
+        {"comment": "股票开户数 — 原始数据"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, index=True, comment="统计日期(YYYYMM)")
+    weekly_new: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="本周新增(户)")
+    total: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="期末总户数(户)")
+    weekly_hold: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="本周持仓户数(户)")
+    weekly_trade: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="本周交易户数(户)")
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, comment="完整API响应JSON"
+    )
+
+
+class RawShareFloat(TimestampMixin, Base):
+    """限售股解禁 (share_float).
+
+    Source: Tushare share_float API
+    Fields: ts_code, ann_date, float_date, float_share,
+            float_ratio, holder_name, share_type
+    """
+    __tablename__ = "raw_share_float"
+    __table_args__ = (
+        {"comment": "限售股解禁 — 原始数据"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    ann_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="公告日期")
+    float_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="解禁日期")
+    float_share: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="解禁数量(股)")
+    float_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="解禁比例(%)")
+    holder_name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, comment="股东名称")
+    share_type: Mapped[Optional[str]] = mapped_column(String(32), nullable=True, comment="股份类型")
     raw_json: Mapped[Optional[str]] = mapped_column(
         String, nullable=True, comment="完整API响应JSON"
     )

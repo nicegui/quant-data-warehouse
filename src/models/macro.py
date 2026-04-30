@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import Column, String, Float, BigInteger, Text
+from sqlalchemy import Column, String, Float, BigInteger, Text, UniqueConstraint
 from src.models.base import TimestampMixin, Base
 
 
@@ -135,3 +135,29 @@ class RawSfMonth(TimestampMixin, Base):
 
     def __repr__(self):
         return f"<RawSfMonth({self.month})>"
+
+
+class RawYieldCurve(TimestampMixin, Base):
+    """国债收益率曲线 (yield_curve).
+
+    Source: Tushare yield_curve API
+    Fields: ts_code, trade_date, curve_type, curve_term, yield_value
+    ts_code examples: 'CGB1Y', 'CGB5Y', 'CGB10Y'
+    Note: May require specific Tushare permissions/version.
+    """
+    __tablename__ = "raw_yield_curve"
+    __table_args__ = (
+        UniqueConstraint("ts_code", "trade_date", name="uq_raw_yield_curve_code_date"),
+        {"comment": "国债收益率曲线 — 原始数据"},
+    )
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code = Column(String(16), nullable=False, index=True, comment="曲线代码")
+    trade_date = Column(String(8), nullable=False, index=True, comment="交易日期")
+    curve_type = Column(String(32), nullable=True, comment="曲线类型")
+    curve_term = Column(Float, nullable=True, comment="期限(年)")
+    yield_value = Column(Float, nullable=True, comment="收益率(%)")
+    raw_json = Column(Text, nullable=True, comment="完整API响应JSON")
+
+    def __repr__(self):
+        return f"<RawYieldCurve({self.ts_code}, {self.trade_date})>"
