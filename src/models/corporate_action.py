@@ -94,3 +94,14 @@ class RawDividend(TimestampMixin, Base):
 
     def __repr__(self):
         return f"<RawDividend({self.ts_code}, {self.ex_date}, div={self.cash_div})>"
+
+
+class RawSuspend(TimestampMixin, Base):
+    """停复牌信息(全量) (suspend)."""
+    __tablename__ = "raw_suspend"
+    __table_args__ = ({"comment": "停复牌信息(全量) — 历史记录"},)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    suspend_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    resume_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    suspend_reason: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)

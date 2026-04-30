@@ -399,3 +399,41 @@ class CuratedFinancialReports(TimestampMixin, Base):
     eps: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     roe: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     bps: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
+
+class RawPledgeDetail(TimestampMixin, Base):
+    """股权质押明细 (pledge_detail)."""
+    __tablename__ = "raw_pledge_detail"
+    __table_args__ = ({"comment": "股权质押明细 — 原始数据"},)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    ann_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    holder_name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    pledge_amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    start_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    end_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    is_release: Mapped[Optional[str]] = mapped_column(String(4), nullable=True)
+    release_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    pledgor: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    holding_amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pledged_amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    p_total_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    h_total_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    is_buyback: Mapped[Optional[str]] = mapped_column(String(4), nullable=True)
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+class RawStkHolderFloatTop(TimestampMixin, Base):
+    """十大流通股东 (top10_floatholders)."""
+    __tablename__ = "raw_stk_holder_float_top"
+    __table_args__ = ({"comment": "十大流通股东 — 原始数据"},)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    ann_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    end_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    holder_name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    hold_amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    hold_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    hold_float_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    hold_change: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    holder_type: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

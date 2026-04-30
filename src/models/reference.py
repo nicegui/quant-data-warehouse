@@ -122,3 +122,16 @@ class RawNameChange(TimestampMixin, Base):
     ann_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="公告日期")
     change_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True, comment="变更原因")
     raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class RefDisclosureDate(TimestampMixin, Base):
+    """财报披露计划 (disclosure_date)."""
+    __tablename__ = "ref_disclosure_date"
+    __table_args__ = ({"comment": "财报披露计划日期"},)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    ann_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    end_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    pre_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    actual_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

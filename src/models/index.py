@@ -122,3 +122,17 @@ class RefIndexBasic(TimestampMixin, Base):
 
     def __repr__(self):
         return f"<RefIndexBasic({self.ts_code}, {self.name})>"
+
+
+class RefIndexClassify(TimestampMixin, Base):
+    """申万行业分类 (index_classify)."""
+    __tablename__ = "ref_index_classify"
+    __table_args__ = ({"comment": "申万行业分类(SW2021)"},)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    index_code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    industry_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    level: Mapped[str] = mapped_column(String(8), nullable=False)
+    industry_code: Mapped[str] = mapped_column(String(32), nullable=False)
+    is_pub: Mapped[Optional[str]] = mapped_column(String(4), nullable=True)
+    parent_code: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    src: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)

@@ -67,6 +67,15 @@ from src.collectors.impl.new_share import NewShareCollector
 from src.collectors.impl.fina_audit import FinaAuditCollector
 from src.collectors.impl.fina_mainbz import FinaMainbzCollector
 from src.collectors.impl.us_stock import UsStockCollector
+from src.collectors.impl.index_weight import IndexWeightCollector
+from src.collectors.impl.index_classify import IndexClassifyCollector
+from src.collectors.impl.margin_detail import MarginDetailCollector
+from src.collectors.impl.pledge_detail import PledgeDetailCollector
+from src.collectors.impl.stk_holdertrade import StkHolderTradeCollector
+from src.collectors.impl.top10_holders import Top10HoldersCollector
+from src.collectors.impl.top10_floatholders import Top10FloatHoldersCollector
+from src.collectors.impl.suspend import SuspendCollector
+from src.collectors.impl.disclosure_date import DisclosureDateCollector
 
 
 __all__ = [
@@ -88,4 +97,9 @@ __all__ = [
     "ShareFloatCollector", "NameChangeCollector", "CctvNewsCollector",
     "ThsCollector", "BlockTradeCollector", "NewShareCollector",
     "FinaAuditCollector", "FinaMainbzCollector", "UsStockCollector",
+    "IndexWeightCollector", "IndexClassifyCollector",
+    "MarginDetailCollector", "PledgeDetailCollector",
+    "StkHolderTradeCollector", "Top10HoldersCollector",
+    "Top10FloatHoldersCollector", "SuspendCollector",
+    "DisclosureDateCollector",
 ]
