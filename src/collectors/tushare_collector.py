@@ -45,6 +45,19 @@ from src.collectors.impl.weekly_monthly import WeeklyMonthlyCollector
 from src.collectors.impl.margin_total import MarginTotalCollector
 from src.collectors.impl.stk_factor import StkFactorCollector
 
+# ── NEW (2026-05-01) ──
+from src.collectors.impl.holder_number import StkHolderNumberCollector
+from src.collectors.impl.holder import HolderCollector
+from src.collectors.impl.moneyflow_hsgt import MoneyflowHsgtCollector
+from src.collectors.impl.fund_basic import FundBasicCollector
+from src.collectors.impl.fund_nav import FundNavCollector
+
+# ── NEW (2026-04-30 - batch 3) ──
+from src.collectors.impl.index_basic import IndexBasicCollector
+from src.collectors.impl.ggt_daily import GgtDailyCollector
+from src.collectors.impl.cn_ppi import CnPpiCollector
+from src.collectors.impl.sf_month import SfMonthCollector
+
 
 __all__ = [
     "StockDailyCollector",
@@ -79,4 +92,15 @@ __all__ = [
     "WeeklyMonthlyCollector",
     "MarginTotalCollector",
     "StkFactorCollector",
+    # NEW (2026-05-01)
+    "StkHolderNumberCollector",
+    "HolderCollector",
+    "MoneyflowHsgtCollector",
+    "FundBasicCollector",
+    "FundNavCollector",
+    # NEW (2026-04-30 - batch 3)
+    "IndexBasicCollector",
+    "GgtDailyCollector",
+    "CnPpiCollector",
+    "SfMonthCollector",
 ]

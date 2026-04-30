@@ -316,3 +316,26 @@ class RawStkFactor(TimestampMixin, Base):
     raw_json: Mapped[Optional[str]] = mapped_column(
         String, nullable=True, comment="完整API响应JSON"
     )
+
+
+class RawStkHolderNumber(TimestampMixin, Base):
+    """股东户数 (stk_holdernumber).
+
+    Source: Tushare stk_holdernumber API
+    Fields: ts_code, ann_date, end_date, holder_num, holder_num_ratio
+    """
+    __tablename__ = "raw_stk_holder_number"
+    __table_args__ = (
+        UniqueConstraint("ts_code", "end_date", name="uq_raw_stk_holder_number_code_date"),
+        {"comment": "股东户数 — 原始数据"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    ann_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="公告日期")
+    end_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="报告期")
+    holder_num: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="股东户数")
+    holder_num_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="股东户数变化率(%)")
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, comment="完整API响应JSON"
+    )

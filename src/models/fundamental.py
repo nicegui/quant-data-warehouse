@@ -215,6 +215,63 @@ class RawForecast(TimestampMixin, Base):
     )
 
 
+class RawStkHolderTrade(TimestampMixin, Base):
+    """高管增减持 (stk_holdertrade) — 董监高持股变动.
+
+    Source: Tushare stk_holdertrade API
+    Fields: ts_code, ann_date, holder_name, holder_type, in_de,
+            change_vol, change_ratio, after_share, after_ratio,
+            avg_price, total_share
+    """
+    __tablename__ = "raw_stk_holder_trade"
+    __table_args__ = (
+        {"comment": "高管增减持 — 原始数据"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    ann_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="公告日期")
+    holder_name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, comment="股东名称")
+    holder_type: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="股东类型")
+    in_de: Mapped[Optional[str]] = mapped_column(String(4), nullable=True, comment="增减: IN/DE")
+    change_vol: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="变动数量(股)")
+    change_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="变动比例(%)")
+    after_share: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="变动后持股(股)")
+    after_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="变动后比例(%)")
+    avg_price: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="均价")
+    total_share: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="总持股(股)")
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, comment="完整API响应JSON"
+    )
+
+
+class RawStkHolderTop(TimestampMixin, Base):
+    """十大股东 (top10_holders) — 前十大股东明细.
+
+    Source: Tushare top10_holders API
+    Fields: ts_code, ann_date, end_date, holder_name, hold_amount,
+            hold_ratio, hold_float_ratio, hold_change, holder_type
+    """
+    __tablename__ = "raw_stk_holder_top"
+    __table_args__ = (
+        {"comment": "十大股东 — 原始数据"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    ann_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="公告日期")
+    end_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="报告期")
+    holder_name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, comment="股东名称")
+    hold_amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="持股数量(股)")
+    hold_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="持股比例(%)")
+    hold_float_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="流通股比例(%)")
+    hold_change: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="持股变动")
+    holder_type: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, comment="股东类型")
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, comment="完整API响应JSON"
+    )
+
+
 class CuratedFinancialReports(TimestampMixin, Base):
     """Cleaned financial report data."""
     __tablename__ = "curated_financial_reports"

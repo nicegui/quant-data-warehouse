@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import Column, String, Float, BigInteger
+from sqlalchemy import Column, String, Float, BigInteger, Text
 from src.models.base import TimestampMixin, Base
 
 
@@ -116,3 +116,43 @@ class RawMarginTotal(TimestampMixin, Base):
     rqmcl = Column(Float)           # 融券卖出量（股）
     rzrqye = Column(Float)          # 融资融券余额（元）
     rqyl = Column(Float, nullable=True)  # 融券余量（股）
+
+
+class RawMoneyflowHsgt(TimestampMixin, Base):
+    """沪深港通资金流向 (moneyflow_hsgt) — 北向/南向资金.
+
+    Source: Tushare moneyflow_hsgt API
+    Fields: trade_date, ggt_ss, ggt_sz, hgt, sgt, north_money, south_money
+    """
+    __tablename__ = "raw_moneyflow_hsgt"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    trade_date = Column(String(8), nullable=False, index=True, unique=True)
+    ggt_ss = Column(Float, nullable=True)       # 港股通(沪)成交净买入(亿)
+    ggt_sz = Column(Float, nullable=True)       # 港股通(深)成交净买入(亿)
+    hgt = Column(Float, nullable=True)          # 沪股通成交净买入(亿)
+    sgt = Column(Float, nullable=True)          # 深股通成交净买入(亿)
+    north_money = Column(Float, nullable=True)  # 北向资金成交净买入(亿)
+    south_money = Column(Float, nullable=True)  # 南向资金成交净买入(亿)
+
+
+class RawGgtDaily(TimestampMixin, Base):
+    """港股通日度成交统计 (ggt_daily).
+
+    Tushare pro.ggt_daily(trade_date=..., start_date=..., end_date=...).
+    """
+    __tablename__ = "raw_ggt_daily"
+    __table_args__ = (
+        {"comment": "港股通日度成交统计"}
+    )
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    trade_date = Column(String(8), nullable=False, index=True, unique=True, comment="交易日期")
+    buy_amount = Column(Float, nullable=True, comment="买入成交金额(亿元)")
+    buy_volume = Column(Float, nullable=True, comment="买入成交笔数(万笔)")
+    sell_amount = Column(Float, nullable=True, comment="卖出成交金额(亿元)")
+    sell_volume = Column(Float, nullable=True, comment="卖出成交笔数(万笔)")
+    raw_json = Column(Text, nullable=True, comment="完整API响应JSON")
+
+    def __repr__(self):
+        return f"<RawGgtDaily({self.trade_date})>"
