@@ -24,9 +24,22 @@ class FuturesCollector(BaseTushareCollector):
     def checkpoint_key(self):
         return "trade_date"
 
-    def fetch(self, trade_date: str = "", **kwargs) -> list[dict]:
-        td = trade_date or dt.now().strftime("%Y%m%d")
-        return self.api_call("fut_daily", trade_date=td)
+    def fetch(self, trade_date: str = "", ts_code: str = "", start_date: str = "", end_date: str = "", exchange: str = "", **kwargs) -> list[dict]:
+        params: dict[str, Any] = {}
+        if ts_code:
+            params["ts_code"] = ts_code
+        if exchange:
+            params["exchange"] = exchange
+        if start_date:
+            params["start_date"] = start_date
+        if end_date:
+            params["end_date"] = end_date
+        if not (start_date or end_date):
+            if trade_date:
+                params["trade_date"] = trade_date
+            elif not params:
+                params["trade_date"] = dt.now().strftime("%Y%m%d")
+        return self.api_call("fut_daily", **params)
 
     def validate(self, raw: list[dict]) -> list[dict]:
         validated = []

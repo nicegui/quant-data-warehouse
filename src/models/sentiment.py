@@ -107,13 +107,13 @@ class RawLimitList(TimestampMixin, Base):
 
 
 class RawTopList(TimestampMixin, Base):
-    """龙虎榜明细 — Tushare top_list."""
+    """龙虎榜明细 — Tushare top_list (15 API fields)."""
     __tablename__ = "raw_top_list"
     __table_args__ = {"comment": "龙虎榜明细 — 原始API返回"}
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    trade_date: Mapped[datetime] = mapped_column(
-        Date, nullable=False, index=True, comment="交易日期"
+    trade_date: Mapped[str] = mapped_column(
+        String(8), nullable=False, index=True, comment="交易日期"
     )
     ts_code: Mapped[str] = mapped_column(
         String(16), nullable=False, index=True, comment="股票代码"
@@ -124,26 +124,38 @@ class RawTopList(TimestampMixin, Base):
     reason: Mapped[Optional[str]] = mapped_column(
         String(256), nullable=True, comment="上榜原因"
     )
-    close_price: Mapped[Optional[float]] = mapped_column(
+    close: Mapped[Optional[float]] = mapped_column(
         Float, nullable=True, comment="收盘价"
     )
-    pct_chg: Mapped[Optional[float]] = mapped_column(
+    pct_change: Mapped[Optional[float]] = mapped_column(
         Float, nullable=True, comment="涨跌幅(%)"
     )
     turnover_rate: Mapped[Optional[float]] = mapped_column(
         Float, nullable=True, comment="换手率(%)"
     )
-    total_amount: Mapped[Optional[float]] = mapped_column(
-        Float, nullable=True, comment="总成交额(万元)"
+    amount: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="成交额(万元)"
+    )
+    l_sell: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="龙虎榜卖出额(万元)"
+    )
+    l_buy: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="龙虎榜买入额(万元)"
+    )
+    l_amount: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="龙虎榜成交额(万元)"
     )
     net_amount: Mapped[Optional[float]] = mapped_column(
         Float, nullable=True, comment="净买入额(万元)"
     )
-    buy_amount: Mapped[Optional[float]] = mapped_column(
-        Float, nullable=True, comment="买入额(万元)"
+    net_rate: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="净买率(%)"
     )
-    sell_amount: Mapped[Optional[float]] = mapped_column(
-        Float, nullable=True, comment="卖出额(万元)"
+    amount_rate: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="成交额占比(%)"
+    )
+    float_values: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="流通市值(万元)"
     )
     raw_json: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True, comment="完整API响应JSON"
@@ -255,3 +267,247 @@ class RawCyqPerf(TimestampMixin, Base):
     raw_json: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True, comment="完整API响应JSON"
     )
+
+
+class RawStkShock(TimestampMixin, Base):
+    """个股异常波动 — Tushare stk_shock.
+
+    Each row = one stock's abnormal volatility announcement on one day.
+    同一只票同日可能多次异常波动，使用 (ts_code, trade_date, period) 唯一约束。
+    """
+    __tablename__ = "raw_stk_shock"
+    __table_args__ = (
+        UniqueConstraint("ts_code", "trade_date", "period", name="uq_stk_shock_ts_code_date_period"),
+        {"comment": "个股异常波动 — 原始API返回"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(
+        String(16), nullable=False, index=True, comment="股票代码"
+    )
+    trade_date: Mapped[datetime] = mapped_column(
+        Date, nullable=False, index=True, comment="公告日期"
+    )
+    name: Mapped[Optional[str]] = mapped_column(
+        String(32), nullable=True, comment="股票名称"
+    )
+    trade_market: Mapped[Optional[str]] = mapped_column(
+        String(32), nullable=True, comment="交易所"
+    )
+    reason: Mapped[Optional[str]] = mapped_column(
+        String(256), nullable=True, comment="异常说明"
+    )
+    period: Mapped[Optional[str]] = mapped_column(
+        String(32), nullable=True, comment="异常期间"
+    )
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, comment="完整API响应JSON"
+    )
+
+
+class RawStkHighShock(TimestampMixin, Base):
+    """个股严重异常波动 — Tushare stk_high_shock.
+
+    Each row = one stock's severe abnormal volatility announcement on one day.
+    同一只票同日可能多次严重异常波动，使用 (ts_code, trade_date, period) 唯一约束。
+    """
+    __tablename__ = "raw_stk_high_shock"
+    __table_args__ = (
+        UniqueConstraint("ts_code", "trade_date", "period", name="uq_stk_high_shock_ts_code_date_period"),
+        {"comment": "个股严重异常波动 — 原始API返回"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(
+        String(16), nullable=False, index=True, comment="股票代码"
+    )
+    trade_date: Mapped[datetime] = mapped_column(
+        Date, nullable=False, index=True, comment="公告日期"
+    )
+    name: Mapped[Optional[str]] = mapped_column(
+        String(32), nullable=True, comment="股票名称"
+    )
+    trade_market: Mapped[Optional[str]] = mapped_column(
+        String(32), nullable=True, comment="交易所"
+    )
+    reason: Mapped[Optional[str]] = mapped_column(
+        String(256), nullable=True, comment="异常说明"
+    )
+    period: Mapped[Optional[str]] = mapped_column(
+        String(32), nullable=True, comment="异常期间"
+    )
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, comment="完整API响应JSON"
+    )
+
+
+class RawStkAlert(TimestampMixin, Base):
+    """交易所重点提示证券 — Tushare stk_alert.
+
+    同一只票可能有多条提示（不同日期范围），使用 (ts_code, start_date, end_date) 唯一约束。
+    """
+    __tablename__ = "raw_stk_alert"
+    __table_args__ = (
+        UniqueConstraint("ts_code", "start_date", "end_date", name="uq_stk_alert_ts_code_start_end"),
+        {"comment": "交易所重点提示证券 — 原始API返回"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(
+        String(16), nullable=False, index=True, comment="股票代码"
+    )
+    name: Mapped[Optional[str]] = mapped_column(
+        String(64), nullable=True, comment="股票名称"
+    )
+    start_date: Mapped[datetime] = mapped_column(
+        Date, nullable=False, index=True, comment="提示起始日期"
+    )
+    end_date: Mapped[datetime] = mapped_column(
+        Date, nullable=True, comment="提示截至日期"
+    )
+    type: Mapped[Optional[str]] = mapped_column(
+        String(64), nullable=True, comment="提示类型"
+    )
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, comment="完整API响应JSON"
+    )
+
+
+class RawSlbLen(TimestampMixin, Base):
+    """转融通融资汇总 (slb_len) — 日频大盘数据.
+
+    Source: Tushare slb_len API
+    """
+    __tablename__ = "raw_slb_len"
+    __table_args__ = (
+        UniqueConstraint("trade_date", name="uq_slb_len_trade_date"),
+        {"comment": "转融通融资汇总 — 原始API返回"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    trade_date: Mapped[str] = mapped_column(
+        String(8), nullable=False, index=True, comment="交易日期"
+    )
+    ob: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="期初余额(亿元)")
+    auc_amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="竞价成交金额(亿元)")
+    repo_amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="再借成交金额(亿元)")
+    repay_amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="偿还金额(亿元)")
+    cb: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="期末余额(亿元)")
+    raw_json: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, comment="完整API响应JSON"
+    )
+
+
+class RawLimitListThs(TimestampMixin, Base):
+    """同花顺涨跌停榜单 (limit_list_ths) — 逐日.
+
+    Source: Tushare limit_list_ths API
+    Data from 2023-11-01, ~150 stocks/day across 5 limit_types.
+    """
+    __tablename__ = "raw_limit_list_ths"
+    __table_args__ = (
+        {"comment": "同花顺涨跌停榜单 — 原始API返回"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    ts_code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    price: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pct_chg: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    open_num: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    lu_desc: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+    limit_type: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    tag: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    status: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    first_lu_time: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+    last_lu_time: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+    first_ld_time: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+    last_ld_time: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+    limit_order: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    limit_amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    turnover_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    free_float: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    lu_limit_order: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    limit_up_suc_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    turnover: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    rise_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    sum_float: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    market_type: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class RawLimitListD(TimestampMixin, Base):
+    """涨跌停列表新版 (limit_list_d) — 逐日.
+
+    Source: Tushare limit_list_d API
+    Data from 2020, ~100 stocks/day across U/D/Z limit_types.
+    """
+    __tablename__ = "raw_limit_list_d"
+    __table_args__ = (
+        {"comment": "涨跌停列表新版 — 原始API返回"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    ts_code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    industry: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pct_chg: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    limit_amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    float_mv: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    total_mv: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    turnover_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    fd_amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    first_time: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+    last_time: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+    open_times: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    up_stat: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    limit_times: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    lim: Mapped[Optional[str]] = mapped_column(String(4), nullable=True)
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class RawLimitStep(TimestampMixin, Base):
+    """连板天梯 (limit_step) — 逐日.
+
+    Source: Tushare limit_step API
+    ~24 stocks/day, tracks consecutive limit-up count.
+    """
+    __tablename__ = "raw_limit_step"
+    __table_args__ = (
+        {"comment": "连板天梯 — 原始API返回"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    ts_code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    nums: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class RawLimitCptList(TimestampMixin, Base):
+    """最强板块统计 (limit_cpt_list) — 逐日.
+
+    Source: Tushare limit_cpt_list API
+    ~20 concept sectors/day ranked by limit-up activity.
+    """
+    __tablename__ = "raw_limit_cpt_list"
+    __table_args__ = (
+        {"comment": "最强板块统计 — 原始API返回"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    ts_code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    days: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    up_stat: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    cons_nums: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    up_nums: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    pct_chg: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    rank: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

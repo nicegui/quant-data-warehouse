@@ -29,21 +29,30 @@ class RawIndexDaily(TimestampMixin, Base):
 
 
 class RawSwDaily(TimestampMixin, Base):
-    """申万行业指数日线 (sw_daily)."""
+    """申万行业指数日线 (sw_daily).
+
+    API fields: ts_code, trade_date, name, open, high, low, close,
+                change, pct_change, vol, amount, pe, pb, float_mv, total_mv
+    """
     __tablename__ = "raw_sw_daily"
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    ts_code = Column(String(32), nullable=False, index=True)
-    trade_date = Column(String(8), nullable=False, index=True)
-    open = Column(Float)
-    high = Column(Float)
-    low = Column(Float)
-    close = Column(Float)
-    pre_close = Column(Float)
-    change = Column(Float)
-    pct_chg = Column(Float)
-    vol = Column(Float)
-    amount = Column(Float)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, comment="指数名称")
+    open: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    high: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    low: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    change: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pct_change: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="涨跌幅(%)")
+    vol: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pe: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="市盈率")
+    pb: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="市净率")
+    float_mv: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="流通市值")
+    total_mv: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="总市值")
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True, comment="完整API响应JSON")
 
 
 class RefConcept(TimestampMixin, Base):
@@ -139,11 +148,11 @@ class RefIndexClassify(TimestampMixin, Base):
 
 class RawThsDaily(TimestampMixin, Base):
     """同花顺板块日线 (ths_daily)."""
-    __tablename__ = "raw_ths_daily_new"
+    __tablename__ = "raw_ths_daily"
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     ts_code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
-    open: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    open_val: Mapped[Optional[float]] = mapped_column("open", Float, nullable=True)
     high: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     low: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
@@ -153,6 +162,9 @@ class RawThsDaily(TimestampMixin, Base):
     pct_change: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     vol: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     turnover_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    total_mv: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    float_mv: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
 class RefThsIndex(TimestampMixin, Base):
     """同花顺板块指数 (ths_index)."""

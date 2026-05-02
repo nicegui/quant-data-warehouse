@@ -64,14 +64,4 @@ class BaostockBasicCollector(BaseCollector):
 
     def store_raw(self, records: list[dict[str, Any]]) -> int:
         """Store validated records, deduplicating by code."""
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RefBaostockBasic).filter_by(
-                    code=rec["code"]
-                ).first()
-                if existing:
-                    continue
-                session.add(RefBaostockBasic(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RefBaostockBasic, records, ["code"])

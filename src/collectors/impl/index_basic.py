@@ -73,3 +73,26 @@ class IndexBasicCollector(BaseTushareCollector):
                     session.add(RefIndexBasic(**rec))
                 written += 1
         return written
+
+    def run(self) -> dict:
+        """Full fetch: all markets, upsert into ref_index_basic."""
+        import logging, time
+        logger = logging.getLogger(__name__)
+        t0 = time.time()
+        total = 0
+
+        markets = ["SSE", "SZSE", "CSI", "CICC", "SW", "MSCI", "OTH"]
+        for m in markets:
+            raw = self.fetch(market=m)
+            if raw:
+                validated = self.validate(raw)
+                written = self.store_raw(validated)
+                total += written
+                logger.info(f"[{m}] {written} rows")
+            else:
+                logger.info(f"[{m}] EMPTY")
+            time.sleep(0.21)
+
+        elapsed = time.time() - t0
+        logger.info(f"index_basic DONE: {total} rows, {int(elapsed)}s")
+        return {"status": "success", "written": total, "elapsed": elapsed}

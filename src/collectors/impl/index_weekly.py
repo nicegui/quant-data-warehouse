@@ -32,3 +32,27 @@ class IndexWeeklyCollector(BaseTushareCollector):
                 e=s.query(RawIndexWeekly).filter_by(ts_code=r["ts_code"],trade_date=r["trade_date"]).first()
                 if not e:s.add(RawIndexWeekly(**r));w+=1
         return w
+
+    def run(self) -> dict:
+        import time, logging
+        from sqlalchemy import text
+        from src.db.session import get_session
+        logger = logging.getLogger(__name__)
+        t0 = time.time()
+        total, errors = 0, 0
+        session = get_session()
+        indices = [r[0] for r in session.execute(text("SELECT ts_code FROM ref_index_basic")).fetchall()]
+        session.close()
+        logger.info(f"Found {len(indices)} index codes")
+        for i, ts_code in enumerate(indices):
+            try:
+                raw = self.fetch(ts_code=ts_code, start_date="19900101", end_date="20260502")
+                if raw:
+                    total += self.store_raw(self.validate(raw))
+            except Exception as e:
+                logger.error(f"[{ts_code}] ERROR: {e}"); errors += 1
+            if (i+1) % 500 == 0:
+                logger.info(f"[{i+1}/{len(indices)}] {total:,} rows | {(i+1)/(time.time()-t0):.1f} idx/s")
+            time.sleep(0.21)
+        logger.info(f"index_weekly DONE: {len(indices)} indices, {total:,} rows, {errors} err, {int(time.time()-t0)}s")
+        return {"status":"success","indices":len(indices),"written":total,"errors":errors,"elapsed":time.time()-t0}

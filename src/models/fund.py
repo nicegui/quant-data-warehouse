@@ -30,11 +30,13 @@ class RawFundPortfolio(TimestampMixin, Base):
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     ts_code = Column(String(32), nullable=False, index=True)
+    ann_date = Column(String(8))       # 公告日期
     end_date = Column(String(8), nullable=False)
     symbol = Column(String(16))
     mkv = Column(Float)            # 持有股票市值（万元）
     amount = Column(Float)
     stk_mkv_ratio = Column(Float)  # 占股票投资市值比
+    stk_float_ratio = Column(Float)  # 占流通股本比例
 
 
 class RawFundBasic(TimestampMixin, Base):
@@ -43,7 +45,9 @@ class RawFundBasic(TimestampMixin, Base):
     Source: Tushare fund_basic API
     Fields: ts_code, name, management, custodian, fund_type, found_date,
             issue_date, issue_amount, invest_type, type, trustee,
-            purc_startdate, red_startdate, m_fee, c_fee, benchmark, status
+            purc_startdate, redm_startdate, due_date, list_date, delist_date,
+            duration_year, p_value, min_amount, exp_return, market,
+            m_fee, c_fee, benchmark, status
     """
     __tablename__ = "raw_fund_basic"
 
@@ -60,7 +64,16 @@ class RawFundBasic(TimestampMixin, Base):
     type = Column(String(32), nullable=True)           # 类型
     trustee = Column(String(128), nullable=True)       # 受托人
     purc_startdate = Column(String(8), nullable=True) # 申购起始日
-    red_startdate = Column(String(8), nullable=True)  # 赎回起始日
+    redm_startdate = Column(String(8), nullable=True) # 赎回起始日
+    due_date = Column(String(8), nullable=True)        # 到期日
+    list_date = Column(String(8), nullable=True)       # 上市日期
+    delist_date = Column(String(8), nullable=True)     # 退市日期
+    duration_year = Column(Float, nullable=True)       # 存续年限
+    p_value = Column(Float, nullable=True)             # 面值
+    min_amount = Column(Float, nullable=True)          # 起购金额
+    exp_return = Column(Float, nullable=True)          # 预期收益率
+    market = Column(String(8), nullable=True)           # 市场(E/O)
+    raw_json = Column(String, nullable=True)            # 原始JSON
     m_fee = Column(Float, nullable=True)              # 管理费率(%)
     c_fee = Column(Float, nullable=True)              # 托管费率(%)
     benchmark = Column(String(256), nullable=True)     # 业绩基准

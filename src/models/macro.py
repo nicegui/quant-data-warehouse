@@ -79,26 +79,51 @@ class RawShibor(TimestampMixin, Base):
 
 
 class RawCnPpi(TimestampMixin, Base):
-    """工业品出厂价格指数 (cn_ppi).
+    """工业品出厂价格指数 (cn_ppi) — Full 31 API fields.
 
-    Tushare pro.cn_ppi(start_period=..., end_period=...).
+    Tushare pro.cn_ppi(start_m=..., end_m=...).
+    Fields: month + 10 yoy + 10 mom + 10 accu
     """
     __tablename__ = "raw_cn_ppi"
     __table_args__ = (
-        {"comment": "工业品出厂价格指数 PPI"}
+        {"comment": "工业品出厂价格指数 PPI — 31 fields"}
     )
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     month = Column(String(8), nullable=False, index=True, unique=True, comment="月份")
+    # 同比
     ppi_yoy = Column(Float, nullable=True, comment="PPI同比(%)")
     ppi_mp_yoy = Column(Float, nullable=True, comment="生产资料同比(%)")
-    ppi_rm_yoy = Column(Float, nullable=True, comment="原材料同比(%)")
-    ppi_living_yoy = Column(Float, nullable=True, comment="生活资料同比(%)")
+    ppi_mp_qm_yoy = Column(Float, nullable=True, comment="采掘同比(%)")
+    ppi_mp_rm_yoy = Column(Float, nullable=True, comment="原材料同比(%)")
+    ppi_mp_p_yoy = Column(Float, nullable=True, comment="加工同比(%)")
     ppi_cg_yoy = Column(Float, nullable=True, comment="消费品同比(%)")
+    ppi_cg_f_yoy = Column(Float, nullable=True, comment="食品同比(%)")
+    ppi_cg_c_yoy = Column(Float, nullable=True, comment="衣着同比(%)")
+    ppi_cg_adu_yoy = Column(Float, nullable=True, comment="一般日用品同比(%)")
+    ppi_cg_dcg_yoy = Column(Float, nullable=True, comment="耐用消费品同比(%)")
+    # 环比
+    ppi_mom = Column(Float, nullable=True, comment="PPI环比(%)")
     ppi_mp_mom = Column(Float, nullable=True, comment="生产资料环比(%)")
-    ppi_rm_mom = Column(Float, nullable=True, comment="原材料环比(%)")
-    ppi_living_mom = Column(Float, nullable=True, comment="生活资料环比(%)")
+    ppi_mp_qm_mom = Column(Float, nullable=True, comment="采掘环比(%)")
+    ppi_mp_rm_mom = Column(Float, nullable=True, comment="原材料环比(%)")
+    ppi_mp_p_mom = Column(Float, nullable=True, comment="加工环比(%)")
     ppi_cg_mom = Column(Float, nullable=True, comment="消费品环比(%)")
+    ppi_cg_f_mom = Column(Float, nullable=True, comment="食品环比(%)")
+    ppi_cg_c_mom = Column(Float, nullable=True, comment="衣着环比(%)")
+    ppi_cg_adu_mom = Column(Float, nullable=True, comment="一般日用品环比(%)")
+    ppi_cg_dcg_mom = Column(Float, nullable=True, comment="耐用消费品环比(%)")
+    # 累计
+    ppi_accu = Column(Float, nullable=True, comment="PPI累计(%)")
+    ppi_mp_accu = Column(Float, nullable=True, comment="生产资料累计(%)")
+    ppi_mp_qm_accu = Column(Float, nullable=True, comment="采掘累计(%)")
+    ppi_mp_rm_accu = Column(Float, nullable=True, comment="原材料累计(%)")
+    ppi_mp_p_accu = Column(Float, nullable=True, comment="加工累计(%)")
+    ppi_cg_accu = Column(Float, nullable=True, comment="消费品累计(%)")
+    ppi_cg_f_accu = Column(Float, nullable=True, comment="食品累计(%)")
+    ppi_cg_c_accu = Column(Float, nullable=True, comment="衣着累计(%)")
+    ppi_cg_adu_accu = Column(Float, nullable=True, comment="一般日用品累计(%)")
+    ppi_cg_dcg_accu = Column(Float, nullable=True, comment="耐用消费品累计(%)")
     raw_json = Column(Text, nullable=True, comment="完整API响应JSON")
 
     def __repr__(self):

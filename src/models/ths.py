@@ -1,4 +1,4 @@
-"""同花顺概念板块 (ths_daily + ths_hot)."""
+"""同花顺概念板块 (ths_member + ths_hot)."""
 
 from __future__ import annotations
 
@@ -6,31 +6,26 @@ from sqlalchemy import Column, String, Float, BigInteger, Text
 from src.models.base import TimestampMixin, Base
 
 
-class RawThsDaily(TimestampMixin, Base):
-    """同花顺概念板块日线行情 (ths_daily).
+class RawThsMember(TimestampMixin, Base):
+    """同花顺概念板块成分 (ths_member).
 
-    Source: Tushare ths_daily API
-    Fields: ts_code, trade_date, open, high, low, close, pre_close,
-            avg_price, change, pct_change, vol, turnover_rate
+    Source: Tushare ths_member API
+    Fields: ts_code, con_code, con_name, weight, in_date, out_date, is_new
     """
-    __tablename__ = "raw_ths_daily"
+    __tablename__ = "raw_ths_member"
     __table_args__ = (
-        {"comment": "同花顺概念板块日线 — 原始数据"},
+        {"comment": "同花顺概念板块成分 — 原始数据"},
     )
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
-    ts_code = Column(String(32), nullable=False, index=True, comment="板块代码")
-    trade_date = Column(String(8), nullable=False, index=True, comment="交易日期")
-    open = Column(Float, nullable=True)
-    high = Column(Float, nullable=True)
-    low = Column(Float, nullable=True)
-    close = Column(Float, nullable=True)
-    pre_close = Column(Float, nullable=True)
-    avg_price = Column(Float, nullable=True, comment="均价")
-    change = Column(Float, nullable=True, comment="涨跌额")
-    pct_change = Column(Float, nullable=True, comment="涨跌幅(%)")
-    vol = Column(Float, nullable=True, comment="成交量(手)")
-    turnover_rate = Column(Float, nullable=True, comment="换手率(%)")
+    ts_code = Column(String(32), nullable=False, index=True, comment="板块指数代码")
+    con_code = Column(String(32), nullable=False, index=True, comment="股票代码")
+    con_name = Column(String(128), nullable=True, comment="股票名称")
+    weight = Column(Float, nullable=True, comment="权重(暂无)")
+    in_date = Column(String(8), nullable=True, comment="纳入日期(暂无)")
+    out_date = Column(String(8), nullable=True, comment="剔除日期(暂无)")
+    is_new = Column(String(4), nullable=True, comment="是否最新Y是N否")
+    raw_json = Column(Text, nullable=True, comment="原始JSON")
 
 
 class RawThsHot(TimestampMixin, Base):

@@ -27,3 +27,24 @@ class OptDailyCollector(BaseTushareCollector):
                 e=s.query(RawOptDaily).filter_by(ts_code=r["ts_code"],trade_date=r["trade_date"]).first()
                 if not e:s.add(RawOptDaily(**r));w+=1
         return w
+
+    def run(self) -> dict:
+        import time, logging
+        from datetime import datetime, timedelta
+        logger = logging.getLogger(__name__)
+        t0 = time.time(); total, errors, days = 0, 0, 0
+        d = datetime(2020,1,1); end = datetime(2026,5,3)
+        while d <= end:
+            ds = d.strftime("%Y%m%d")
+            try:
+                raw = self.fetch(trade_date=ds)
+                if raw: total += self.store_raw(self.validate(raw))
+                days += 1
+            except Exception as e:
+                logger.error(f"[{ds}] ERROR: {e}"); errors += 1
+            d += timedelta(days=1)
+            if days % 200 == 0:
+                logger.info(f"[{ds}] {days} days, {total:,} rows | {days/(time.time()-t0):.1f} d/s")
+            time.sleep(0.21)
+        logger.info(f"opt_daily DONE: {days} days, {total:,} rows, {errors} err, {int(time.time()-t0)}s")
+        return {"status":"success","written":total,"days":days,"errors":errors,"elapsed":time.time()-t0}

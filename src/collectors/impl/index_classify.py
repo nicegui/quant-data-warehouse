@@ -46,3 +46,17 @@ class IndexClassifyCollector(BaseTushareCollector):
                 session.add(RefIndexClassify(**rec))
                 written += 1
         return written
+
+    def run(self) -> dict:
+        import time, logging
+        logger = logging.getLogger(__name__)
+        t0 = time.time(); total = 0
+        for level in ("L1","L2","L3"):
+            raw = self.fetch(level=level)
+            if raw:
+                n = self.store_raw(self.validate(raw))
+                total += n
+                logger.info(f"[{level}] {n} rows")
+            time.sleep(0.21)
+        logger.info(f"index_classify DONE: {total} rows, {int(time.time()-t0)}s")
+        return {"status":"success","written":total,"elapsed":time.time()-t0}

@@ -15,13 +15,16 @@ from src.collectors.impl.index_daily import IndexCollector
 from src.collectors.impl.macro import MacroCollector
 from src.collectors.impl.futures import FuturesCollector
 from src.collectors.impl.fund import FundCollector
-from src.collectors.impl.margin import MarginCollector
 
 # ── NEW collectors (2026-04-30) ──
 from src.collectors.impl.stk_mins import StkMinsCollector
 from src.collectors.impl.major_news import MajorNewsCollector
 from src.collectors.impl.trade_cal import TradeCalCollector
 from src.collectors.impl.limit_list import LimitListCollector
+from src.collectors.impl.limit_list_ths import LimitListThsCollector
+from src.collectors.impl.limit_list_d import LimitListDCollector
+from src.collectors.impl.limit_step import LimitStepCollector
+from src.collectors.impl.limit_cpt_list import LimitCptListCollector
 from src.collectors.impl.top_list import TopListCollector
 from src.collectors.impl.suspend_d import SuspendDCollector
 from src.collectors.impl.dividend import DividendCollector
@@ -92,6 +95,7 @@ from src.collectors.impl.limit_list_all import LimitListAllCollector
 from src.collectors.impl.index_monthly import IndexMonthlyCollector
 from src.collectors.impl.index_weekly import IndexWeeklyCollector
 from src.collectors.impl.ths_daily import ThsDailyCollector
+from src.collectors.impl.ths_member import ThsMemberCollector
 from src.collectors.impl.ths_index import ThsIndexCollector
 from src.collectors.impl.opt_basic import OptBasicCollector
 from src.collectors.impl.opt_daily import OptDailyCollector
@@ -122,8 +126,28 @@ from src.collectors.impl.cyq_perf import CyqPerfCollector
 
 # ── dc_index / margin_secs / bak_basic (2026-05-01) ──
 from src.collectors.impl.dc_index import DcIndexCollector
+from src.collectors.impl.dc_member import DcMemberCollector
+from src.collectors.impl.dc_daily import DcDailyCollector
+from src.collectors.impl.dc_hot import DcHotCollector
+from src.collectors.impl.hm_list import HmListCollector
+from src.collectors.impl.hm_detail import HmDetailCollector
 from src.collectors.impl.margin_secs import MarginSecsCollector
 from src.collectors.impl.bak_basic import BakBasicCollector
+from src.collectors.impl.moneyflow_ths import MoneyflowThsCollector
+from src.collectors.impl.moneyflow_dc import MoneyflowDcCollector
+from src.collectors.impl.moneyflow_cnt_ths import MoneyflowCntThsCollector
+from src.collectors.impl.moneyflow_ind_ths import MoneyflowIndThsCollector
+from src.collectors.impl.moneyflow_ind_dc import MoneyflowIndDcCollector
+from src.collectors.impl.index_member import IndexMemberCollector
+from src.collectors.impl.ci_index_member import CiIndexMemberCollector
+from src.collectors.impl.ci_daily import CiDailyCollector
+from src.collectors.impl.idx_factor_pro import IdxFactorProCollector
+from src.collectors.impl.daily_info import DailyInfoCollector
+from src.collectors.impl.research_report import ResearchReportCollector
+from src.collectors.impl.kpl_list import KplListCollector
+from src.collectors.impl.kpl_concept import KplConceptCollector
+from src.collectors.impl.dc_concept import DcConceptCollector
+from src.collectors.impl.dc_concept_cons import DcConceptConsCollector
 
 # ── Non-Tushare collectors (2026-05-01) ──
 from src.collectors.impl.akshare_macro import AkshareMacroCollector
@@ -198,8 +222,12 @@ __all__ = [
     "FundPortfolioCollector", "CbBasicCollector", "CbIssueCollector",
     "CbRateCollector", "YieldCurveCollector",
     "StkAuctionCollector", "IndexDailyBasicCollector", "IndexGlobalCollector",
-    "LimitListAllCollector", "IndexMonthlyCollector", "IndexWeeklyCollector",
-    "ThsDailyCollector", "ThsIndexCollector",
+    "LimitListAllCollector",
+    "LimitListThsCollector",
+    "LimitListDCollector",
+    "LimitStepCollector",
+    "LimitCptListCollector", "IndexMonthlyCollector", "IndexWeeklyCollector",
+    "ThsDailyCollector", "ThsMemberCollector", "ThsIndexCollector",
     "OptBasicCollector", "OptDailyCollector",
     "FxDailyCollector", "FxBasicCollector",
     "RepoDailyCollector", "BondBlkCollector",
@@ -212,7 +240,23 @@ __all__ = [
     # 筹码分布
     "CyqChipsCollector", "CyqPerfCollector",
     # dc_index / margin_secs / bak_basic
-    "DcIndexCollector", "MarginSecsCollector", "BakBasicCollector",
+    "DcIndexCollector", "DcMemberCollector", "DcDailyCollector", "DcHotCollector", "HmListCollector", "HmDetailCollector", "MarginSecsCollector", "BakBasicCollector",
+    "MoneyflowThsCollector",
+    "MoneyflowDcCollector",
+    "MoneyflowCntThsCollector",
+    "MoneyflowIndThsCollector",
+    "MoneyflowIndDcCollector",
+    # 开盘啦榜单
+    "IndexMemberCollector",
+    "CiIndexMemberCollector",
+    "CiDailyCollector",
+    "IdxFactorProCollector",
+    "DailyInfoCollector",
+    "ResearchReportCollector",
+    "KplListCollector",
+    "KplConceptCollector",
+    "DcConceptCollector",
+    "DcConceptConsCollector",
     # Non-Tushare collectors (akshare / baostock)
     "AkshareMacroCollector", "AkshareHsgtCollector", "BaostockBasicCollector",
 ]

@@ -20,6 +20,10 @@ class StkLimitCollector(BaseTushareCollector):
     def __init__(self, token: str):
         super().__init__("stk_limit", token)
 
+    @property
+    def checkpoint_key(self):
+        return "trade_date"
+
     def fetch(self, trade_date: str = "", **kwargs) -> list[dict]:
         from datetime import datetime as dt
 

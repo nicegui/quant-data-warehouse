@@ -11,8 +11,20 @@ class ThsIndexCollector(BaseTushareCollector):
         if exchange:p["exchange"]=exchange
         return self.api_call("ths_index",**p)
     def validate(self, raw):
+        import math
         r=[]
-        for x in raw: r.append({k:x.get(k)for k in("ts_code","name","count","exchange","list_date","type")})
+        for x in raw:
+            cnt = x.get("count")
+            if cnt is None or (isinstance(cnt, float) and math.isnan(cnt)):
+                cnt = None
+            ld = x.get("list_date")
+            if ld is None or (isinstance(ld, float) and math.isnan(ld)):
+                ld = None
+            r.append({"ts_code": x.get("ts_code"), "name": x.get("name"),
+                      "count": int(cnt) if cnt is not None else None,
+                      "exchange": x.get("exchange"),
+                      "list_date": str(ld) if ld else None,
+                      "type": x.get("type")})
         return r
     def store_raw(self,recs):
         w=0

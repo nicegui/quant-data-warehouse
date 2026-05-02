@@ -15,10 +15,14 @@ from src.collectors.impl._utils import _f
 
 
 class NewShareCollector(BaseTushareCollector):
-    """新股上市 collector (全量拉取)."""
+    """新股上市 collector (全量拉取 + 增量)."""
 
     def __init__(self, token: str):
         super().__init__("new_share", token)
+
+    @property
+    def checkpoint_key(self):
+        return "ipo_date"
 
     def fetch(self, start_date: str = "", end_date: str = "", **kwargs) -> list[dict]:
         params: dict[str, Any] = {}
@@ -54,6 +58,7 @@ class NewShareCollector(BaseTushareCollector):
             for rec in records:
                 existing = session.query(RawNewShare).filter_by(
                     ts_code=rec["ts_code"],
+                    sub_code=rec.get("sub_code", ""),
                 ).first()
                 if existing:
                     continue

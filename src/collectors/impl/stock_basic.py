@@ -22,7 +22,15 @@ class StockBasicCollector(BaseTushareCollector):
     def __init__(self, token: str):
         super().__init__("stock_basic", token)
 
+    # All fields from stock_basic API
+    _ALL_FIELDS = (
+        "ts_code,symbol,name,area,industry,market,exchange,list_status,"
+        "list_date,delist_date,is_hs,act_name,act_ent_type,"
+        "fullname,enname,cnspell,curr_type"
+    )
+
     def fetch(self, **kwargs) -> list[dict[str, Any]]:
+        kwargs.setdefault("fields", self._ALL_FIELDS)
         return self.api_call("stock_basic", **kwargs)
 
     def validate(self, raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -35,9 +43,17 @@ class StockBasicCollector(BaseTushareCollector):
                 "area": row.get("area"),
                 "industry": row.get("industry"),
                 "market": row.get("market"),
+                "exchange": row.get("exchange"),
+                "list_status": row.get("list_status"),
                 "list_date": row.get("list_date"),
                 "delist_date": row.get("delist_date"),
                 "is_hs": row.get("is_hs"),
+                "act_name": row.get("act_name"),
+                "act_ent_type": row.get("act_ent_type"),
+                "fullname": row.get("fullname"),
+                "enname": row.get("enname"),
+                "cnspell": row.get("cnspell"),
+                "curr_type": row.get("curr_type"),
             })
         return validated
 
@@ -94,9 +110,17 @@ class StockBasicCollector(BaseTushareCollector):
                     area=rec.get("area"),
                     industry=rec.get("industry"),
                     market=rec.get("market"),
+                    exchange=rec.get("exchange"),
+                    list_status=rec.get("list_status"),
                     list_date=list_date,
                     delist_date=delist_date,
                     is_hs=rec.get("is_hs"),
+                    act_name=rec.get("act_name"),
+                    act_ent_type=rec.get("act_ent_type"),
+                    fullname=rec.get("fullname"),
+                    enname=rec.get("enname"),
+                    cnspell=rec.get("cnspell"),
+                    curr_type=rec.get("curr_type"),
                 ))
                 written += 1
         return written

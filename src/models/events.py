@@ -1,7 +1,7 @@
 """Events & calendar / 事件日历."""
 from __future__ import annotations
 from typing import Optional
-from sqlalchemy import BigInteger, Float, String
+from sqlalchemy import BigInteger, Float, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 from src.models.base import Base, TimestampMixin
 
@@ -21,8 +21,13 @@ class RawEcoCal(TimestampMixin, Base):
 class RefBrokerRecommend(TimestampMixin, Base):
     """券商月度荐股 (broker_recommend)."""
     __tablename__ = "ref_broker_recommend"
+    __table_args__ = (
+        UniqueConstraint("month", "broker", "ts_code", name="uq_broker_rec_month_broker_code"),
+        {"comment": "券商月度金股推荐"},
+    )
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     month: Mapped[str] = mapped_column(String(6), nullable=False, index=True)
     broker: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     ts_code: Mapped[Optional[str]] = mapped_column(String(16), nullable=True, index=True)
     name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

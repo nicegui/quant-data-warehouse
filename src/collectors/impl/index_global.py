@@ -34,3 +34,19 @@ class IndexGlobalCollector(BaseTushareCollector):
                 e = s.query(RawIndexGlobal).filter_by(ts_code=r["ts_code"], trade_date=r["trade_date"]).first()
                 if not e: s.add(RawIndexGlobal(**r)); w += 1
         return w
+
+    def run(self) -> dict:
+        import time, logging
+        logger = logging.getLogger(__name__)
+        t0 = time.time(); total = 0
+        codes = ["XIN9","HSI","HKTECH","HKAH","DJI","SPX","IXIC","FTSE","FCHI",
+                 "GDAXI","N225","KS11","AS51","SENSEX","IBOVESPA","RTS",
+                 "TWII","CKLSE","SPTSX","CSX5P","RUT"]
+        for ts_code in codes:
+            raw = self.fetch(ts_code=ts_code)
+            if raw:
+                total += self.store_raw(self.validate(raw))
+                logger.info(f"[{ts_code}] {len(raw)} rows")
+            time.sleep(0.21)
+        logger.info(f"index_global DONE: {total} rows, {int(time.time()-t0)}s")
+        return {"status":"success","written":total,"elapsed":time.time()-t0}

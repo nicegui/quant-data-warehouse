@@ -67,3 +67,69 @@ class RawHkMins(TimestampMixin, Base):
     low: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     vol: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
+
+class RawCcassHold(TimestampMixin, Base):
+    """中央结算系统持股汇总 (ccass_hold)."""
+    __tablename__ = "raw_ccass_hold"
+    __table_args__ = ({"comment": "中央结算系统持股汇总 — 原始数据"},)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    shareholding: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="持股量(股)")
+    hold_nums: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="参与者数目")
+    hold_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="占A股总数百分比")
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class RawCcassHoldDetail(TimestampMixin, Base):
+    """中央结算系统持股明细 (ccass_hold_detail)."""
+    __tablename__ = "raw_ccass_hold_detail"
+    __table_args__ = ({"comment": "CCASS席位持股明细 — 原始数据"},)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    col_participant_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    col_participant_name: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    col_shareholding: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    col_shareholding_percent: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class RawHkHold(TimestampMixin, Base):
+    """沪深港股通持股明细 (hk_hold)."""
+    __tablename__ = "raw_hk_hold"
+    __table_args__ = ({"comment": "港股通持股明细 — 原始数据"},)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    code: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    vol: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True, comment="持股数量(股)")
+    ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="持股占比(%)")
+    exchange: Mapped[Optional[str]] = mapped_column(String(4), nullable=True)
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class RawStkAhComparison(TimestampMixin, Base):
+    """AH股比价 (stk_ah_comparison)."""
+    __tablename__ = "raw_stk_ah_comparison"
+    __table_args__ = (
+        UniqueConstraint("hk_code", "ts_code", "trade_date", name="uq_ah_comp_code_date"),
+        {"comment": "AH股比价数据"},
+    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    hk_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    hk_name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    hk_pct_chg: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    hk_close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    close: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pct_chg: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    ah_comparison: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    ah_premium: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

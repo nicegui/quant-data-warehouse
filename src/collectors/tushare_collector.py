@@ -27,7 +27,6 @@ from src.collectors.impl.index_daily import IndexCollector
 from src.collectors.impl.macro import MacroCollector
 from src.collectors.impl.futures import FuturesCollector
 from src.collectors.impl.fund import FundCollector
-from src.collectors.impl.margin import MarginCollector
 from src.collectors.impl.stk_mins import StkMinsCollector
 from src.collectors.impl.major_news import MajorNewsCollector
 from src.collectors.impl.trade_cal import TradeCalCollector
@@ -110,6 +109,12 @@ from src.collectors.impl.broker_recommend import BrokerRecommendCollector
 from src.collectors.impl.fund_manager import FundManagerCollector
 from src.collectors.impl.hs_const import HsConstCollector
 from src.collectors.impl.ggt_monthly import GgtMonthlyCollector
+from src.collectors.impl.income_vip import IncomeVipCollector
+from src.collectors.impl.balance_sheet_vip import BalanceSheetVipCollector
+from src.collectors.impl.cashflow_vip import CashFlowVipCollector
+from src.collectors.impl.forecast_vip import ForecastVipCollector
+from src.collectors.impl.fina_indicator_vip import FinaIndicatorVipCollector
+from src.collectors.impl.fina_audit_vip import FinaAuditVipCollector
 from src.collectors.impl.hk_basic import HkBasicCollector
 from src.collectors.impl.hk_mins import HkMinsCollector
 from src.collectors.impl.us_tradecal import UsTradeCalCollector
@@ -129,7 +134,38 @@ from src.collectors.impl.dc_index import DcIndexCollector
 from src.collectors.impl.margin_secs import MarginSecsCollector
 from src.collectors.impl.bak_basic import BakBasicCollector
 
-# ── Non-Tushare collectors (2026-05-01) ──
+# ── bak_daily / stk_account_old (2026-05-01) ──
+from src.collectors.impl.bak_daily import BakDailyCollector
+from src.collectors.impl.stk_account_old import StkAccountOldCollector
+
+# ── stk_shock (2026-05-01) ──
+from src.collectors.impl.stk_shock import StkShockCollector
+from src.collectors.impl.stk_high_shock import StkHighShockCollector
+from src.collectors.impl.stk_alert import StkAlertCollector
+
+# ── report_rc (2026-05-01) ──
+from src.collectors.impl.report_rc_vip import ReportRcVipCollector
+
+# ── stk_factor_pro (2026-05-01) ──
+from src.collectors.impl.stk_factor_pro import StkFactorProCollector
+
+# ── ccass_hold (2026-05-01) ──
+from src.collectors.impl.ccass_hold import CcassHoldCollector
+from src.collectors.impl.ccass_hold_detail import CcassHoldDetailCollector
+
+# ── hk_hold (2026-05-01) ──
+from src.collectors.impl.hk_hold import HkHoldCollector
+
+# ── yfinance / AKShare multi-source (2026-05-01) ──
+from src.collectors.impl.us_fundamental import UsFundamentalCollector
+from src.collectors.impl.cb_jsl import CbJslCollector
+from src.collectors.impl.analyst import AnalystCollector
+from src.collectors.impl.fund_flow import FundFlowCollector
+from src.collectors.impl.index_cons import IndexConsCollector
+from src.collectors.impl.hsgt_individual import HsgtIndividualCollector
+from src.collectors.impl.foreign_futures import ForeignFuturesCollector
+
+# ── Non-Tushare collectors (akshare / baostock) ──
 from src.collectors.impl.akshare_macro import AkshareMacroCollector
 from src.collectors.impl.akshare_hsgt import AkshareHsgtCollector
 from src.collectors.impl.baostock_basic import BaostockBasicCollector
@@ -141,7 +177,7 @@ __all__ = [
     "DailyBasicCollector", "ConsultationCollector", "FinancialReportCollector",
     "FinancialIndicatorCollector", "TopInstCollector", "MoneyflowCollector",
     "StkLimitCollector", "ConceptCollector", "IndexCollector",
-    "MacroCollector", "FuturesCollector", "FundCollector", "MarginCollector",
+    "MacroCollector", "FuturesCollector", "FundCollector",
     "StkMinsCollector", "MajorNewsCollector", "TradeCalCollector",
     "LimitListCollector", "TopListCollector", "SuspendDCollector",
     "DividendCollector", "ExpressCollector", "BalanceSheetCollector",
@@ -174,6 +210,12 @@ __all__ = [
     "StkSurvCollector", "StkManagersCollector", "StkRewardsCollector",
     "BrokerRecommendCollector", "FundManagerCollector",
     "HsConstCollector", "GgtMonthlyCollector",
+    "IncomeVipCollector",
+    "BalanceSheetVipCollector",
+    "CashFlowVipCollector",
+    "ForecastVipCollector",
+    "FinaIndicatorVipCollector",
+    "FinaAuditVipCollector",
     "HkBasicCollector", "HkMinsCollector", "UsTradeCalCollector",
     "ShiborLprCollector", "ShiborQuoteCollector", "LiborCollector",
     "HiborCollector", "WzIndexCollector", "EcoCalCollector",
@@ -181,6 +223,21 @@ __all__ = [
     "CyqChipsCollector", "CyqPerfCollector",
     # dc_index / margin_secs / bak_basic
     "DcIndexCollector", "MarginSecsCollector", "BakBasicCollector",
-    # Non-Tushare collectors (akshare / baostock)
+    # bak_daily / stk_account_old
+    "BakDailyCollector", "StkAccountOldCollector",
+    # stk_shock
+    "StkShockCollector", "StkHighShockCollector", "StkAlertCollector",
+    # report_rc
+    "ReportRcVipCollector",
+    # stk_factor_pro
+    "StkFactorProCollector",
+    # ccass_hold
+    "CcassHoldCollector", "CcassHoldDetailCollector",
+    # hk_hold
+    "HkHoldCollector",
+    # yfinance / AKShare multi-source
+    "UsFundamentalCollector", "CbJslCollector", "AnalystCollector",
+    "FundFlowCollector",    "IndexConsCollector", "HsgtIndividualCollector", "ForeignFuturesCollector",
+    # Non-Tushare collectors(akshare / baostock)
     "AkshareMacroCollector", "AkshareHsgtCollector", "BaostockBasicCollector",
 ]

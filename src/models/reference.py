@@ -29,7 +29,9 @@ class RefStockBasic(TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(32), nullable=False)
     area: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
     industry: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
-    market: Mapped[Optional[str]] = mapped_column(String(4), nullable=True, comment="主板/创业板/科创板")
+    market: Mapped[Optional[str]] = mapped_column(String(16), nullable=True, comment="主板/创业板/科创板/CDR/北交所")
+    exchange: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="SSE/SZSE/BSE")
+    list_status: Mapped[Optional[str]] = mapped_column(String(2), nullable=True, comment="L上市 D退市 P暂停 G过会未交易")
     list_date: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -37,6 +39,12 @@ class RefStockBasic(TimestampMixin, Base):
         DateTime(timezone=True), nullable=True
     )
     is_hs: Mapped[Optional[str]] = mapped_column(String(4), nullable=True, comment="沪深港通标")
+    act_name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, comment="实控人")
+    act_ent_type: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, comment="实控人企业性质")
+    fullname: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, comment="全称")
+    enname: Mapped[Optional[str]] = mapped_column(String(256), nullable=True, comment="英文全称")
+    cnspell: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, comment="拼音缩写")
+    curr_type: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="交易货币")
 
 
 class RefTradeCal(TimestampMixin, Base):
@@ -198,3 +206,39 @@ class RawBakBasic(TimestampMixin, Base):
 
     def __repr__(self):
         return f"<RawBakBasic({self.trade_date}, {self.ts_code})>"
+
+
+class RefStockCompany(TimestampMixin, Base):
+    """上市公司基础信息 (stock_company) — 公司治理/简介.
+
+    Source: Tushare stock_company API
+    Fields: ts_code, com_name, com_id, exchange, chairman, manager,
+            secretary, reg_capital, setup_date, province, city,
+            introduction, website, email, office, employees,
+            main_business, business_scope
+    """
+    __tablename__ = "ref_stock_company"
+    __table_args__ = (
+        UniqueConstraint("ts_code", name="uq_ref_stock_company_code"),
+        {"comment": "上市公司基础信息"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts_code: Mapped[str] = mapped_column(String(16), nullable=False, unique=True)
+    com_name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, comment="公司全称")
+    com_id: Mapped[Optional[str]] = mapped_column(String(32), nullable=True, comment="统一社会信用代码")
+    exchange: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="SSE/SZSE/BSE")
+    chairman: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, comment="法人代表")
+    manager: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, comment="总经理")
+    secretary: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, comment="董秘")
+    reg_capital: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="注册资本(万元)")
+    setup_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="注册日期")
+    province: Mapped[Optional[str]] = mapped_column(String(32), nullable=True, comment="省份")
+    city: Mapped[Optional[str]] = mapped_column(String(32), nullable=True, comment="城市")
+    introduction: Mapped[Optional[str]] = mapped_column(Text, nullable=True, comment="公司介绍")
+    website: Mapped[Optional[str]] = mapped_column(String(256), nullable=True, comment="公司主页")
+    email: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, comment="电子邮件")
+    office: Mapped[Optional[str]] = mapped_column(Text, nullable=True, comment="办公室")
+    employees: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True, comment="员工人数")
+    main_business: Mapped[Optional[str]] = mapped_column(Text, nullable=True, comment="主要业务及产品")
+    business_scope: Mapped[Optional[str]] = mapped_column(Text, nullable=True, comment="经营范围")

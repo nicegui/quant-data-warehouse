@@ -56,6 +56,7 @@ class MarginTotalCollector(BaseTushareCollector):
             for rec in records:
                 existing = session.query(RawMarginTotal).filter_by(
                     trade_date=rec["trade_date"],
+                    exchange_id=rec.get("exchange_id", ""),
                 ).first()
                 if existing:
                     continue

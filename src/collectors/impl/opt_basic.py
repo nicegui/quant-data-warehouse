@@ -24,3 +24,17 @@ class OptBasicCollector(BaseTushareCollector):
                 e=s.query(RefOptBasic).filter_by(ts_code=r["ts_code"]).first()
                 if not e:s.add(RefOptBasic(**r));w+=1
         return w
+
+    def run(self) -> dict:
+        import time, logging
+        logger = logging.getLogger(__name__)
+        t0 = time.time(); total = 0
+        for ex in ("SSE","SZSE","DCE","CFFEX"):
+            raw = self.fetch(exchange=ex)
+            if raw:
+                n = self.store_raw(self.validate(raw))
+                total += n
+                logger.info(f"[{ex}] {n} rows")
+            time.sleep(0.21)
+        logger.info(f"opt_basic DONE: {total} rows, {int(time.time()-t0)}s")
+        return {"status":"success","written":total,"elapsed":time.time()-t0}

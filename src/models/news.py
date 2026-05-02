@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import BigInteger, DateTime, String, Text
+from sqlalchemy import BigInteger, DateTime, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.models.base import Base, TimestampMixin
@@ -66,13 +66,19 @@ class RawCctvNews(TimestampMixin, Base):
 class RawStkSurv(TimestampMixin, Base):
     """机构调研 (stk_surv)."""
     __tablename__ = "raw_stk_surv"
+    __table_args__ = (
+        UniqueConstraint("ts_code", "surv_date", "rece_org", name="uq_raw_stk_surv_code_date_org"),
+        {"comment": "机构调研记录"},
+    )
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
     name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     surv_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, index=True)
-    fund_visitors: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
-    rece_place: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
-    rece_mode: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    rece_org: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    org_type: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    comp_rece: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
+    fund_visitors: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    rece_place: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    rece_mode: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    rece_org: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    org_type: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    comp_rece: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

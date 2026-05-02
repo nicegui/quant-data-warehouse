@@ -64,3 +64,76 @@ class TopInstCollector(BaseTushareCollector):
                 session.add(RawTopInst(**rec))
                 written += 1
         return written
+
+    # ── Date-loop Run ──────────────────────────────
+
+    def _get_existing_dates(self) -> set[str]:
+        try:
+            from src.db.session import get_session
+            from sqlalchemy import text
+            session = get_session()
+            rows = session.execute(
+                text("SELECT DISTINCT trade_date FROM raw_top_inst")
+            ).fetchall()
+            session.close()
+            return {r[0] for r in rows}
+        except Exception:
+            return set()
+
+    def run(self, **kwargs) -> dict:
+        import logging, time
+        from datetime import datetime, timedelta
+        logger = logging.getLogger(__name__)
+
+        existing = self._get_existing_dates()
+
+        d = datetime(2015, 1, 1)
+        today = datetime.now()
+        dp = []
+        while d <= today:
+            if d.weekday() < 5:
+                dp.append(d.strftime("%Y%m%d"))
+            d += timedelta(days=1)
+
+        last_date = self.get_checkpoint_date()
+
+        stats = {"fetched": 0, "written": 0, "errors": 0, "days": 0, "skipped": 0}
+        t0 = time.time()
+
+        for i, d in enumerate(dp):
+            if last_date and d <= last_date:
+                stats["skipped"] += 1
+                continue
+            if d in existing:
+                continue
+
+            time.sleep(0.20)
+            try:
+                raw = self.fetch(trade_date=d)
+            except Exception:
+                stats["errors"] += 1
+                continue
+
+            if not raw:
+                continue
+
+            validated = self.validate(raw)
+            written = self.store_raw(validated)
+            stats["fetched"] += len(validated)
+            stats["written"] += written
+            stats["days"] += 1
+            self._update_checkpoint(d, written)
+
+        elapsed = time.time() - t0
+        logger.info("top_inst DONE: %d days, %s rows, %d skipped, %.0fs",
+                    stats["days"], f"{stats['written']:,}",
+                    stats["skipped"], elapsed)
+        return {
+            "status": "success" if stats["errors"] == 0 else "partial",
+            "fetched": stats["fetched"],
+            "written": stats["written"],
+            "days": stats["days"],
+            "skipped": stats["skipped"],
+            "errors": stats["errors"],
+            "elapsed": elapsed,
+        }

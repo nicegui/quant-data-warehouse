@@ -1,4 +1,12 @@
-"""Abstract base class for all data collectors — with checkpoint/resume support."""
+"""Abstract base classes for all data collectors — with checkpoint/resume support.
+
+Collector hierarchy:
+  BaseCollector              (abstract: fetch / validate / store_raw + run pipeline)
+  ├── BaseTushareCollector   (token + lazy pro + api_call helper)
+  ├── BaseAKShareCollector   (lazy ak import + rate limiter)
+  ├── BaseYFinanceCollector  (lazy yf.Ticker + error handling)
+  └── BaseBaostockCollector  (login/logout lifecycle)
+"""
 
 from __future__ import annotations
 
@@ -42,8 +50,40 @@ class BaseCollector(ABC):
 
     @abstractmethod
     def store_raw(self, records: list[dict[str, Any]]) -> int:
-        """Store validated records into raw layer tables."""
+        """Store validated records into raw layer tables.
+
+        For collectors that use _store_dedup internally, this should delegate.
+        """
         ...
+
+    # ── Shared store helper (for single-model collectors) ──
+
+    def _store_dedup(
+        self,
+        model_cls: Any,
+        records: list[dict[str, Any]],
+        dedup_keys: list[str],
+    ) -> int:
+        """Generic dedup-and-insert helper.
+
+        Args:
+            model_cls: SQLAlchemy model class (e.g. RawMarginDetail)
+            records: validated dicts with keys matching model columns
+            dedup_keys: field names that form the unique key (e.g. ["ts_code", "trade_date"])
+
+        Returns:
+            Number of records actually written.
+        """
+        written = 0
+        with db_session() as session:
+            for rec in records:
+                filters = {k: rec[k] for k in dedup_keys if k in rec}
+                existing = session.query(model_cls).filter_by(**filters).first()
+                if existing:
+                    continue
+                session.add(model_cls(**rec))
+                written += 1
+        return written
 
     # ── Checkpoint support ──
 
@@ -217,6 +257,10 @@ class BaseCollector(ABC):
             pass  # Don't let audit failure break the pipeline
 
 
+# ────────────────────────────────────────────
+# Data-source-specific base collectors
+# ────────────────────────────────────────────
+
 class BaseTushareCollector(BaseCollector):
     """Base collector for Tushare Pro API sources."""
 
@@ -240,3 +284,120 @@ class BaseTushareCollector(BaseCollector):
         if df is None or df.empty:
             return []
         return df.to_dict(orient="records")
+
+
+class BaseAKShareCollector(BaseCollector):
+    """Base collector for AKShare (ak) data sources.
+
+    Provides:
+      - Lazy ak import (installed as optional dependency)
+      - _ak_fetch helper: call ak function → DataFrame → list[dict]
+      - _safe_float helper for Chinese financial data (空 → None)
+
+    Subclass pattern:
+      class MyCollector(BaseAKShareCollector):
+          def __init__(self):
+              super().__init__("my_akshare")
+          def fetch(self, **kwargs):
+              return self._ak_fetch(ak.macro_china_cpi_yearly)
+    """
+
+    def __init__(self, name: str):
+        super().__init__(name)
+        self._ak = None
+
+    @property
+    def ak(self):
+        """Lazy akshare import."""
+        if self._ak is None:
+            import akshare as ak
+            self._ak = ak
+        return self._ak
+
+    def _ak_fetch(self, fn, *args, **kwargs) -> list[dict[str, Any]]:
+        """Call an akshare function and return rows as list[dict].
+
+        Args:
+            fn: akshare function (e.g. ak.macro_china_cpi_yearly)
+            *args, **kwargs: passed to fn
+
+        Returns:
+            List of row dicts, or [] on empty/None result.
+        """
+        df = fn(*args, **kwargs)
+        if df is None or (hasattr(df, "empty") and df.empty):
+            return []
+        return df.to_dict(orient="records")
+
+    @staticmethod
+    def _safe_float(val: Any) -> float | None:
+        """Coerce to float, return None on failure (handles Chinese 万/亿 strings)."""
+        if val is None:
+            return None
+        try:
+            return float(val)
+        except (ValueError, TypeError):
+            return None
+
+    @staticmethod
+    def _safe_str(val: Any) -> str:
+        """Coerce to str, empty string on None."""
+        if val is None:
+            return ""
+        return str(val)
+
+
+class BaseYFinanceCollector(BaseCollector):
+    """Base collector for yfinance (yf) data sources.
+
+    Provides:
+      - Lazy yf import
+      - _get_ticker helper: yf.Ticker(symbol)
+      - _safe_float helper
+
+    yfinance is 100% free, no API key needed.
+
+    Subclass pattern:
+      class UsFundamentalCollector(BaseYFinanceCollector):
+          def __init__(self):
+              super().__init__("us_fundamental")
+          def fetch(self, symbol="AAPL", **kwargs):
+              ticker = self._get_ticker(symbol)
+              return self._yf_financials(ticker, "quarterly")
+    """
+
+    def __init__(self, name: str):
+        super().__init__(name)
+        self._yf = None
+
+    @property
+    def yf(self):
+        """Lazy yfinance import."""
+        if self._yf is None:
+            import yfinance as yf
+            self._yf = yf
+        return self._yf
+
+    def _get_ticker(self, symbol: str) -> Any:
+        """Get a yfinance Ticker object.
+
+        Args:
+            symbol: ticker symbol (e.g. "AAPL", "0700.HK")
+        """
+        return self.yf.Ticker(symbol)
+
+    @staticmethod
+    def _safe_float(val: Any) -> float | None:
+        """Coerce to float, return None on failure."""
+        if val is None:
+            return None
+        try:
+            return float(val)
+        except (ValueError, TypeError):
+            return None
+
+    @staticmethod
+    def _safe_str(val: Any) -> str:
+        if val is None:
+            return ""
+        return str(val)

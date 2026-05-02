@@ -44,7 +44,6 @@ class StkHolderNumberCollector(BaseTushareCollector):
                 "ann_date": row.get("ann_date"),
                 "end_date": row.get("end_date"),
                 "holder_num": _f(row.get("holder_num")),
-                "holder_num_ratio": _f(row.get("holder_num_ratio")),
                 "raw_json": json.dumps(row, ensure_ascii=False, default=str),
             })
         return validated

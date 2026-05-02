@@ -39,3 +39,18 @@ class IndexDailyBasicCollector(BaseTushareCollector):
                 e = s.query(RawIndexDailyBasic).filter_by(ts_code=r["ts_code"], trade_date=r["trade_date"]).first()
                 if not e: s.add(RawIndexDailyBasic(**r)); w += 1
         return w
+
+    def run(self) -> dict:
+        import time, logging
+        logger = logging.getLogger(__name__)
+        t0 = time.time(); total = 0
+        codes = ["000001.SH","399001.SZ","000016.SH","000905.SH","399005.SZ","399006.SZ"]
+        for ts_code in codes:
+            raw = self.fetch(ts_code=ts_code, start_date="20040101", end_date="20260502")
+            if raw:
+                n = self.store_raw(self.validate(raw))
+                total += n
+                logger.info(f"[{ts_code}] {n} rows")
+            time.sleep(0.21)
+        logger.info(f"index_dailybasic DONE: {total} rows, {int(time.time()-t0)}s")
+        return {"status":"success","written":total,"elapsed":time.time()-t0}
