@@ -1,107 +1,133 @@
-"""基金仓位 + 公募持仓 collector."""
+"""基金仓位 — FundPositionCollector
+
+Uses curl + CSRF token to bypass legulegu.com SSL issues.
+Covers three fund types: stock (股票型), linghuo (灵活混合型), pingheng (平衡混合型).
+"""
+
 from __future__ import annotations
+
 import json
-import time
+import re
+import subprocess
+from hashlib import md5
+from datetime import datetime
 from typing import Any
-from src.collectors.base import BaseAKShareCollector
-from src.models.macro_fund import RawFundPosition, RawFundHolding
+from urllib.parse import urlencode
+
+from src.models.macro_fund import RawFundPosition
+from src.collectors.base import BaseCollector
 
 
-class FundPositionCollector(BaseAKShareCollector):
-    """基金仓位估算 (乐股)."""
+# Fund type config: (api_type, fund_type, display_name)
+FUND_TYPES = [
+    ("pos_stock", "stock", "股票型"),
+    ("pos_linghuo", "linghuo", "灵活混合型"),
+    ("pos_pingheng", "pingheng", "平衡混合型"),
+]
+
+
+class FundPositionCollector(BaseCollector):
+    """Collect fund position estimates from legulegu.com via curl."""
 
     def __init__(self):
         super().__init__("fund_position")
+        self._csrf: str | None = None
+        self._cookie_file: str = "/tmp/lg_cookies.txt"
+
+    # ── Shared helpers ──
+
+    def _ensure_csrf(self) -> str:
+        """Fetch CSRF token from legulegu page if not cached."""
+        if self._csrf:
+            return self._csrf
+
+        result = subprocess.run(
+            ["curl", "-sS", "--insecure", "-c", self._cookie_file, "--max-time", "20",
+             "-H", "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+             "https://legulegu.com/stockdata/fund-position/pos-pingheng"],
+            capture_output=True, text=True, timeout=25
+        )
+        match = re.search(r'<meta name="_csrf" content="([^"]+)"', result.stdout)
+        if not match:
+            raise RuntimeError(f"CSRF token not found in page (len={len(result.stdout)})")
+        self._csrf = match.group(1)
+        return self._csrf
+
+    def _token(self) -> str:
+        """Generate md5(date) token."""
+        return md5(datetime.now().date().isoformat().encode("utf-8")).hexdigest()
+
+    def _call_api(self, api_type: str) -> list[dict[str, Any]]:
+        """Call legulegu API for one fund type."""
+        csrf = self._ensure_csrf()
+        params = urlencode({
+            "token": self._token(),
+            "type": api_type,
+            "category": "总仓位",
+            "marketId": "5",
+        })
+        url = f"https://legulegu.com/api/stockdata/fund-position?{params}"
+
+        result = subprocess.run(
+            ["curl", "-sS", "--insecure", "-b", self._cookie_file, "--max-time", "30",
+             "-H", f"X-CSRF-Token: {csrf}",
+             "-H", "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+             url],
+            capture_output=True, text=True, timeout=35
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"curl failed: {result.stderr[:200]}")
+        try:
+            data = json.loads(result.stdout)
+        except json.JSONDecodeError:
+            raise RuntimeError(f"API returned non-JSON: {result.stdout[:300]}")
+        if isinstance(data, dict) and "error" in data:
+            raise RuntimeError(f"API error: {data}")
+        return data
+
+    # ── Collector interface ──
 
     def fetch(self, **kwargs) -> list[dict[str, Any]]:
-        return self._ak_fetch(self.ak.fund_balance_position_lg)
+        """Fetch all fund types. Returns raw API records with _fund_type tag."""
+        rows: list[dict[str, Any]] = []
+        for api_type, fund_type, _display in FUND_TYPES:
+            try:
+                data = self._call_api(api_type)
+                for r in data:
+                    r["_fund_type"] = fund_type
+                rows.extend(data)
+            except Exception as e:
+                print(f"[fund_position] {fund_type} fetch failed: {e}")
+        return rows
 
     def validate(self, raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        if not raw:
-            return []
-        validated = []
-        for row in raw:
+        """Normalize and type-coerce."""
+        validated: list[dict[str, Any]] = []
+        for r in raw:
             rec = {
-                "trade_date": self._safe_str(row.get("日期") or row.get("date")),
-                "stock_fund_pct": self._safe_float(row.get("股票型")),
-                "hybrid_fund_pct": self._safe_float(row.get("混合型")),
-                "total_pct": self._safe_float(row.get("总仓位")),
-                "raw_json": json.dumps(row, ensure_ascii=False, default=str),
+                "trade_date": str(r.get("date", "")),
+                "fund_type": str(r.get("_fund_type", "")),
+                "position": self._safe_float(r.get("position")),
+                "close": self._safe_float(r.get("close")),
+                "raw_json": json.dumps(r, ensure_ascii=False, default=str),
             }
-            validated.append(rec)
+            if rec["trade_date"] and rec["fund_type"]:
+                validated.append(rec)
         return validated
 
     def store_raw(self, records: list[dict[str, Any]]) -> int:
+        """Store via _store_dedup upsert."""
         if not records:
             return 0
-        return self._store_dedup(RawFundPosition, records, ["trade_date"])
+        return self._store_dedup(RawFundPosition, records, ["trade_date", "fund_type"])
 
+    # ── Static helpers ──
 
-class FundHoldingCollector(BaseAKShareCollector):
-    """公募基金持仓明细.
-
-    Fetches holdings for all active funds from Tushare's fund_basic list.
-    """
-
-    def __init__(self):
-        super().__init__("fund_holding")
-
-    def fetch(self, fund_code: str = "000001", date: str = "2025", **kwargs) -> list[dict[str, Any]]:
-        return self._ak_fetch(self.ak.fund_portfolio_hold_em, symbol=fund_code, date=date)
-
-    def validate(self, raw: list[dict[str, Any]], fund_code: str = "") -> list[dict[str, Any]]:
-        if not raw:
-            return []
-        validated = []
-        for row in raw:
-            rec = {
-                "fund_code": fund_code,
-                "stock_code": self._safe_str(row.get("股票代码")),
-                "stock_name": self._safe_str(row.get("股票名称")),
-                "report_date": self._safe_str(row.get("报告期")),
-                "hold_value": self._safe_float(row.get("持股市值")),
-                "hold_pct": self._safe_float(row.get("占净值比例") or row.get("占净值比")),
-                "shares": self._safe_float(row.get("持股数")),
-                "raw_json": json.dumps(row, ensure_ascii=False, default=str),
-            }
-            validated.append(rec)
-        return validated
-
-    def store_raw(self, records: list[dict[str, Any]]) -> int:
-        if not records:
-            return 0
-        return self._store_dedup(RawFundHolding, records, ["fund_code", "stock_code", "report_date"])
-
-    def run_batch(self, date: str = "2025", limit: int = 100) -> int:
-        """Batch fetch holdings for top funds."""
-        from src.db.session import db_session
-        from sqlalchemy import text
-
-        with db_session() as s:
-            r = s.execute(
-                text(
-                    "SELECT DISTINCT ts_code FROM fund_basic "
-                    "WHERE market IN ('E','O') AND status='L' LIMIT :n"
-                ),
-                {"n": limit},
-            )
-            fund_codes = [row[0] for row in r]
-
-        if not fund_codes:
-            print("[fund_holding] No funds found in fund_basic")
-            return 0
-
-        all_written = 0
-        for i, fc in enumerate(fund_codes):
-            raw = self.fetch(fund_code=fc, date=date)
-            if not raw:
-                continue
-            valid = self.validate(raw, fund_code=fc)
-            written = self.store_raw(valid)
-            all_written += written
-            if (i + 1) % 20 == 0:
-                print(f"[fund_holding] {i+1}/{len(fund_codes)} funds, {all_written} holdings")
-            time.sleep(0.3)
-
-        print(f"[fund_holding] Done: {len(fund_codes)} funds, {all_written} holdings total")
-        return all_written
+    @staticmethod
+    def _safe_float(val: Any) -> float | None:
+        if val is None or val == ".00" or val == "":
+            return None
+        try:
+            return float(val)
+        except (ValueError, TypeError):
+            return None
