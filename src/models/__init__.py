@@ -96,6 +96,7 @@ from src.models.akshare_v5 import (
 )
 from src.models.akshare_v6 import RawIpoDeclare
 from src.models.akshare_v7 import RawStockCxg
+from src.models.akshare_v8 import RawPeerComparison
 
 __all__ = [
     "Base", "TimestampMixin",
@@ -160,4 +161,5 @@ __all__ = [
     "RawFundRating", "RawFundManager", "RawCreditSpread",
     "RawIpoDeclare",
     "RawStockCxg",
+    "RawPeerComparison",
 ]
