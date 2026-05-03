@@ -164,6 +164,7 @@ from src.collectors.impl.akshare_v10 import AkshareV10Collector
 from src.collectors.impl.akshare_v11 import AkshareV11Collector
 from src.collectors.impl.akshare_v12 import AkshareV12Collector
 from src.collectors.impl.akshare_v13 import AkshareV13Collector
+from src.collectors.impl.akshare_v14 import AkshareV14Collector
 from src.collectors.impl.analyst_forecast import AnalystForecastCollector
 
 # ── Non-Tushare collectors (2026-05-01) ──
@@ -290,4 +291,5 @@ __all__ = [
     "AkshareV11Collector",
     "AkshareV12Collector",
     "AkshareV13Collector",
+    "AkshareV14Collector",
 ]
