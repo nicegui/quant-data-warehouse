@@ -79,6 +79,9 @@ from src.models.macro_fund import RawSocialFinance, RawFundPosition, RawFundHold
 from src.models.analyst import RawAnalystRank, RawAnalystDetail
 from src.models.analyst_forecast import RawAnalystForecast
 from src.models.foreign_futures import RawForeignFutures
+from src.models.akshare_v2 import (
+    RawRestrictedRelease, RawFxGold, RawConsumerGoods, RawRealEstate,
+)
 
 __all__ = [
     "Base", "TimestampMixin",
@@ -134,4 +137,5 @@ __all__ = [
     "RawUsDividend", "RawUsSplit", "RawUsRecommendation",
     "RawUsInstitutional", "RawUsInfo",
     "RawForeignFutures",
+    "RawRestrictedRelease", "RawFxGold", "RawConsumerGoods", "RawRealEstate",
 ]
