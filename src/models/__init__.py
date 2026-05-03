@@ -75,6 +75,7 @@ from src.models.us_fundamental import (
     RawUsInstitutional, RawUsInfo,
 )
 from src.models.analyst import RawAnalystRank
+from src.models.analyst_forecast import RawAnalystForecast
 from src.models.foreign_futures import RawForeignFutures
 
 __all__ = [

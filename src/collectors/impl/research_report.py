@@ -52,9 +52,12 @@ class ResearchReportCollector(BaseTushareCollector):
                     w += 1
         return w
 
+    # research_report API 限 5次/分钟，12s 间隔 = 5次/分钟刚好不超
+    RATE_LIMIT_SLEEP = 12.5
+
     def run(self) -> dict:
         t0 = time.time()
-        total, errors, days = 0, 0, 0
+        total, errors, days, consecutive_rate_limits = 0, 0, 0, 0
         d = datetime(2017, 1, 1)
         end = datetime(2026, 5, 3)
 
@@ -65,14 +68,25 @@ class ResearchReportCollector(BaseTushareCollector):
                 if raw:
                     total += self.store_raw(self.validate(raw))
                 days += 1
+                consecutive_rate_limits = 0
             except Exception as e:
-                logger.error(f"[{date_str}] ERROR: {e}")
-                errors += 1
+                msg = str(e)
+                if "频率超限" in msg:
+                    consecutive_rate_limits += 1
+                    wait = min(consecutive_rate_limits * 15, 120)
+                    logger.warning(f"[{date_str}] rate-limited, backoff {wait}s (consecutive={consecutive_rate_limits})")
+                    time.sleep(wait)
+                    errors += 1
+                    continue  # retry same date without advancing
+                else:
+                    logger.error(f"[{date_str}] ERROR: {e}")
+                    errors += 1
             d += timedelta(days=1)
+            consecutive_rate_limits = 0
 
-            if days % 200 == 0:
+            if days % 50 == 0:
                 logger.info(f"[{date_str}] {days} days, {total:,} rows | {days/(time.time()-t0):.1f} d/s")
-            time.sleep(0.21)
+            time.sleep(self.RATE_LIMIT_SLEEP)
 
         logger.info(f"research_report DONE: {days} days, {total:,} rows, {errors} err, {int(time.time()-t0)}s")
         return {"status": "success", "written": total, "days": days, "errors": errors, "elapsed": time.time() - t0}

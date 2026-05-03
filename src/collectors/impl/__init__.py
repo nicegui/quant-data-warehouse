@@ -148,6 +148,7 @@ from src.collectors.impl.kpl_list import KplListCollector
 from src.collectors.impl.kpl_concept import KplConceptCollector
 from src.collectors.impl.dc_concept import DcConceptCollector
 from src.collectors.impl.dc_concept_cons import DcConceptConsCollector
+from src.collectors.impl.analyst_forecast import AnalystForecastCollector
 
 # ── Non-Tushare collectors (2026-05-01) ──
 from src.collectors.impl.akshare_macro import AkshareMacroCollector

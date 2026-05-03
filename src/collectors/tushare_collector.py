@@ -169,6 +169,7 @@ from src.collectors.impl.foreign_futures import ForeignFuturesCollector
 from src.collectors.impl.akshare_macro import AkshareMacroCollector
 from src.collectors.impl.akshare_hsgt import AkshareHsgtCollector
 from src.collectors.impl.baostock_basic import BaostockBasicCollector
+from src.collectors.impl.analyst_forecast import AnalystForecastCollector
 
 
 
@@ -240,4 +241,5 @@ __all__ = [
     "FundFlowCollector",    "IndexConsCollector", "HsgtIndividualCollector", "ForeignFuturesCollector",
     # Non-Tushare collectors(akshare / baostock)
     "AkshareMacroCollector", "AkshareHsgtCollector", "BaostockBasicCollector",
+    "AnalystForecastCollector",
 ]

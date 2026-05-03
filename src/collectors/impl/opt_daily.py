@@ -10,7 +10,7 @@ class OptDailyCollector(BaseTushareCollector):
     @property
     def checkpoint_key(self): return "trade_date"
     def fetch(self, ts_code="", trade_date="", start_date="", end_date="", **kw):
-        p={}
+        p={"limit": 15000}
         if ts_code:p["ts_code"]=ts_code
         if trade_date:p["trade_date"]=trade_date
         return self.api_call("opt_daily",**p)
