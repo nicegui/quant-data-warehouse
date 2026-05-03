@@ -177,6 +177,7 @@ from src.collectors.impl.akshare_v2 import AkshareV2Collector
 from src.collectors.impl.akshare_v3 import AkshareV3Collector
 from src.collectors.impl.akshare_v4 import AkshareV4Collector
 from src.collectors.impl.akshare_v5 import AkshareV5Collector
+from src.collectors.impl.akshare_v6 import AkshareV6Collector
 from src.collectors.impl.analyst_forecast import AnalystForecastCollector
 
 
@@ -255,4 +256,5 @@ __all__ = [
     "AkshareV3Collector",
     "AkshareV4Collector",
     "AkshareV5Collector",
+    "AkshareV6Collector",
 ]
