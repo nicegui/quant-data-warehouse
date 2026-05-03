@@ -1,143 +1,119 @@
-"""数据适配层 — Parquet/DuckDB → Polars DataFrame
-
-从 curated parquet 层读取数据，组装为因子计算所需的 DataFrame。
-
-数据源:
-  - curated/stock_daily_adj/  → 复权后的 OHLCV
-  - ref/adj_factor/           → 复权因子
-  - ref/stock_basic/          → 股票基础信息
-
-输出: Polars DataFrame with columns:
-  ts_code, trade_date, open, high, low, close, volume, amount, ...
-  (按 ts_code 分组, trade_date 排序)
-"""
+"""因子数据读取层."""
 
 from __future__ import annotations
-
-import polars as pl
-from pathlib import Path
-
-
-# 默认数据路径
-DEFAULT_DATA_DIR = Path("data/parquet")
+import pandas as pd
+from sqlalchemy import text
+from src.db.engine import get_engine
 
 
-def load_daily(
-    data_dir: str | Path | None = None,
-    start_date: str | None = None,
-    end_date: str | None = None,
-    ts_codes: list[str] | None = None,
-) -> pl.DataFrame:
-    """加载日频行情数据。
+def _query(sql: str, params: dict | None = None) -> pd.DataFrame:
+    """通用查询."""
+    engine = get_engine()
+    try:
+        with engine.connect() as conn:
+            return pd.read_sql(text(sql), conn, params=params)
+    except Exception:
+        return pd.DataFrame()
 
-    Args:
-        data_dir: parquet 文件根目录
-        start_date: 起始日期 YYYYMMDD
-        end_date: 截止日期 YYYYMMDD
-        ts_codes: 股票代码过滤 (None = 全部)
 
-    Returns:
-        Polars DataFrame, columns: ts_code, trade_date, open, high, low,
-        close, volume, amount, turnover_rate, adj_factor, pre_close
-    """
-    path = Path(data_dir or DEFAULT_DATA_DIR) / "curated/stock_daily_adj"
-
-    if not path.exists():
-        raise FileNotFoundError(
-            f"Data not found at {path}. Run parquet export first."
-        )
-
-    df = pl.read_parquet(str(path) + "/*.parquet")
-
+def _add_date_filters(params: dict, conditions: list, start_date=None, end_date=None,
+                      date_col: str = "trade_date"):
+    """Helper: add date range filters."""
     if start_date:
-        df = df.filter(pl.col("trade_date") >= start_date)
+        conditions.append(f"{date_col} >= :start_date")
+        params["start_date"] = start_date
     if end_date:
-        df = df.filter(pl.col("trade_date") <= end_date)
-    if ts_codes:
-        df = df.filter(pl.col("ts_code").is_in(ts_codes))
-
-    return df.sort(["ts_code", "trade_date"])
+        conditions.append(f"{date_col} <= :end_date")
+        params["end_date"] = end_date
 
 
-def load_financial(
-    data_dir: str | Path | None = None,
-    report_dates: list[str] | None = None,
-) -> pl.DataFrame:
-    """加载财务数据 (用于估值/质量因子)。
+# ── 行情 ──
 
-    Returns columns: ts_code, end_date, roe, roa, gross_margin,
-                     net_margin, debt_ratio, eps, bvps, ...
+def read_stock_daily(start_date=None, end_date=None) -> pd.DataFrame:
+    conditions = ["close IS NOT NULL"]
+    params = {}
+    _add_date_filters(params, conditions, start_date, end_date)
+    sql = f"""
+        SELECT ts_code, trade_date::date AS trade_date, close
+        FROM raw_stock_daily WHERE {' AND '.join(conditions)} ORDER BY trade_date
     """
-    path = Path(data_dir or DEFAULT_DATA_DIR) / "curated/financial_reports"
-    if not path.exists():
-        raise FileNotFoundError(f"Financial data not found at {path}")
-
-    df = pl.read_parquet(str(path) + "/*.parquet")
-
-    if report_dates:
-        df = df.filter(pl.col("end_date").is_in(report_dates))
-
-    return df.sort(["ts_code", "end_date"])
+    df = _query(sql, params)
+    if df.empty: return pd.DataFrame()
+    return df.pivot(index="trade_date", columns="ts_code", values="close")
 
 
-def load_moneyflow(
-    data_dir: str | Path | None = None,
-    start_date: str | None = None,
-    end_date: str | None = None,
-) -> pl.DataFrame:
-    """加载资金流数据 (用于情绪因子)。"""
-    path = Path(data_dir or DEFAULT_DATA_DIR) / "raw/moneyflow"
-    if not path.exists():
-        raise FileNotFoundError(f"Moneyflow data not found at {path}")
-
-    df = pl.read_parquet(str(path) + "/*.parquet")
-
-    if start_date:
-        df = df.filter(pl.col("trade_date") >= start_date)
-    if end_date:
-        df = df.filter(pl.col("trade_date") <= end_date)
-
-    return df.sort(["ts_code", "trade_date"])
-
-
-def to_factor_df(
-    df: pl.DataFrame,
-    extra_cols: list[str] | None = None,
-) -> pl.DataFrame:
-    """准备因子计算 DataFrame — 确保必需列存在，添加计算字段。
-
-    必需列: ts_code, trade_date, open, high, low, close, volume
-    可选: amount, adj_factor, turnover_rate
-
-    计算字段:
-      - vwap = amount / volume (如果 amount 存在)
-      - pct_chg = close / close.shift(1) - 1
+def read_index_daily(index_code="000300.SH", start_date=None, end_date=None) -> pd.DataFrame:
+    conditions = ["ts_code = :code"]
+    params = {"code": index_code}
+    _add_date_filters(params, conditions, start_date, end_date)
+    sql = f"""
+        SELECT trade_date::date AS trade_date, close
+        FROM raw_index_daily WHERE {' AND '.join(conditions)} ORDER BY trade_date
     """
-    required = {"ts_code", "trade_date", "open", "high", "low", "close", "volume"}
-    missing = required - set(df.columns)
-    if missing:
-        raise ValueError(f"Missing required columns: {missing}")
+    df = _query(sql, params)
+    if df.empty: return pd.DataFrame()
+    return df.set_index("trade_date")
 
-    result = df.clone()
 
-    # vwap
-    if "amount" in result.columns:
-        result = result.with_columns(
-            (pl.col("amount") / pl.col("volume")).alias("vwap")
-        )
+# ── 基本面 ──
 
-    # pct_chg (per stock)
-    result = result.sort(["ts_code", "trade_date"])
-    result = result.with_columns(
-        (pl.col("close") / pl.col("close").shift(1).over("ts_code") - 1.0).alias(
-            "pct_chg"
-        )
-    )
-
-    # pre_close
-    if "pre_close" not in result.columns:
-        result = result.with_columns(
-            pl.col("close").shift(1).over("ts_code").alias("pre_close")
-        )
-
+def read_daily_basic(start_date=None, end_date=None, fields=None) -> dict:
+    if fields is None:
+        fields = ["pe_ttm", "pb", "total_mv", "turnover_rate"]
+    conditions = []
+    params = {}
+    _add_date_filters(params, conditions, start_date, end_date)
+    cols = ", ".join(fields)
+    where = "WHERE " + " AND ".join(conditions) if conditions else ""
+    sql = f"SELECT ts_code, trade_date::date AS trade_date, {cols} FROM raw_daily_basic {where} ORDER BY trade_date"
+    df = _query(sql, params)
+    if df.empty: return {f: pd.DataFrame() for f in fields}
+    result = {}
+    for f in fields:
+        result[f] = df.pivot(index="trade_date", columns="ts_code", values=f) if f in df.columns else pd.DataFrame()
     return result
+
+
+def read_financial_indicators(start_date=None, end_date=None, fields=None) -> pd.DataFrame:
+    if fields is None:
+        fields = ["roe", "roa", "grossprofit_margin", "netprofit_margin",
+                  "debt_to_assets", "or_yoy", "profit_dedt"]
+    conditions = []
+    params = {}
+    _add_date_filters(params, conditions, start_date, end_date, date_col="end_date")
+    cols = ", ".join(fields)
+    where = "WHERE " + " AND ".join(conditions) if conditions else ""
+    sql = f"SELECT ts_code, end_date::date AS trade_date, {cols} FROM raw_financial_indicators {where} ORDER BY end_date"
+    return _query(sql, params)
+
+
+# ── 另类/情绪 ──
+
+def read_macro_indicator(sources: list[str]) -> pd.DataFrame:
+    placeholders = ",".join(f":s{i}" for i in range(len(sources)))
+    params = {f"s{i}": s for i, s in enumerate(sources)}
+    sql = f"""
+        SELECT date::date AS date, sub_key, value, source
+        FROM raw_macro_indicator WHERE source IN ({placeholders}) AND value IS NOT NULL ORDER BY date
+    """
+    return _query(sql, params)
+
+
+def read_peer_comparison(dimension="valuation") -> pd.DataFrame:
+    return _query("""
+        SELECT target_symbol AS ts_code, code AS peer_code, dimension, rank_info, raw_json
+        FROM raw_peer_comparison WHERE dimension = :dim
+    """, {"dim": dimension})
+
+
+def read_moneyflow(start_date=None, end_date=None) -> pd.DataFrame:
+    conditions = []
+    params = {}
+    _add_date_filters(params, conditions, start_date, end_date)
+    where = "WHERE " + " AND ".join(conditions) if conditions else ""
+    sql = f"""
+        SELECT ts_code, trade_date::date AS trade_date,
+               net_mf_vol, net_mf_amount
+        FROM raw_moneyflow {where} ORDER BY trade_date
+    """
+    return _query(sql, params)
