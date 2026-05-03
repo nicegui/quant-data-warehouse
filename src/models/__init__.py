@@ -91,6 +91,9 @@ from src.models.akshare_v4 import (
     RawGlobalMacro, RawLprRate, RawCbIndex,
     RawHs300Option, RawEtfScale, RawUnemployment,
 )
+from src.models.akshare_v5 import (
+    RawFundRating, RawFundManager, RawCreditSpread,
+)
 
 __all__ = [
     "Base", "TimestampMixin",
@@ -152,4 +155,5 @@ __all__ = [
     "RawFxSpot", "RawUsStockDaily",
     "RawGlobalMacro", "RawLprRate", "RawCbIndex",
     "RawHs300Option", "RawEtfScale", "RawUnemployment",
+    "RawFundRating", "RawFundManager", "RawCreditSpread",
 ]
