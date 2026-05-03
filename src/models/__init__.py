@@ -82,6 +82,11 @@ from src.models.foreign_futures import RawForeignFutures
 from src.models.akshare_v2 import (
     RawRestrictedRelease, RawFxGold, RawConsumerGoods, RawRealEstate,
 )
+from src.models.akshare_v3 import (
+    RawShippingIndex, RawCommodityPrice, RawYieldCurve,
+    RawRepoRate, RawIndustrialProduction, RawBaiduHotSearch,
+    RawFxSpot, RawUsStockDaily,
+)
 
 __all__ = [
     "Base", "TimestampMixin",
@@ -138,4 +143,7 @@ __all__ = [
     "RawUsInstitutional", "RawUsInfo",
     "RawForeignFutures",
     "RawRestrictedRelease", "RawFxGold", "RawConsumerGoods", "RawRealEstate",
+    "RawShippingIndex", "RawCommodityPrice", "RawYieldCurve",
+    "RawRepoRate", "RawIndustrialProduction", "RawBaiduHotSearch",
+    "RawFxSpot", "RawUsStockDaily",
 ]
