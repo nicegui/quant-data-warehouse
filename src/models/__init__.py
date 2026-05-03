@@ -74,7 +74,7 @@ from src.models.us_fundamental import (
     RawUsDividend, RawUsSplit, RawUsRecommendation,
     RawUsInstitutional, RawUsInfo,
 )
-from src.models.analyst import RawAnalystRank
+from src.models.analyst import RawAnalystRank, RawAnalystDetail
 from src.models.analyst_forecast import RawAnalystForecast
 from src.models.foreign_futures import RawForeignFutures
 
@@ -128,7 +128,7 @@ __all__ = [
     "RawHsgtIndividual",
     "RawFundFlow",
     "RawIndexCons",
-    "RawAnalystRank",
+    "RawAnalystRank", "RawAnalystDetail",
     "RawUsDividend", "RawUsSplit", "RawUsRecommendation",
     "RawUsInstitutional", "RawUsInfo",
     "RawForeignFutures",
