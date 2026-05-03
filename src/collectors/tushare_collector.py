@@ -175,6 +175,7 @@ from src.collectors.impl.fund_position import FundPositionCollector
 from src.collectors.impl.fund_portfolio import FundPortfolioCollector
 from src.collectors.impl.akshare_v2 import AkshareV2Collector
 from src.collectors.impl.akshare_v3 import AkshareV3Collector
+from src.collectors.impl.akshare_v4 import AkshareV4Collector
 from src.collectors.impl.analyst_forecast import AnalystForecastCollector
 
 
@@ -251,4 +252,5 @@ __all__ = [
     "FundPositionCollector", "FundPortfolioCollector",
     "AkshareV2Collector",
     "AkshareV3Collector",
+    "AkshareV4Collector",
 ]

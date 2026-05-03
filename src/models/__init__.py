@@ -87,6 +87,10 @@ from src.models.akshare_v3 import (
     RawRepoRate, RawIndustrialProduction, RawBaiduHotSearch,
     RawFxSpot, RawUsStockDaily,
 )
+from src.models.akshare_v4 import (
+    RawGlobalMacro, RawLprRate, RawCbIndex,
+    RawHs300Option, RawEtfScale, RawUnemployment,
+)
 
 __all__ = [
     "Base", "TimestampMixin",
@@ -146,4 +150,6 @@ __all__ = [
     "RawShippingIndex", "RawCommodityPrice", "RawYieldCurve",
     "RawRepoRate", "RawIndustrialProduction", "RawBaiduHotSearch",
     "RawFxSpot", "RawUsStockDaily",
+    "RawGlobalMacro", "RawLprRate", "RawCbIndex",
+    "RawHs300Option", "RawEtfScale", "RawUnemployment",
 ]
