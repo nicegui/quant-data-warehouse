@@ -98,6 +98,7 @@ from src.models.akshare_v6 import RawIpoDeclare
 from src.models.akshare_v7 import RawStockCxg
 from src.models.akshare_v8 import RawPeerComparison
 from src.models.akshare_v9 import RawCommodityLogistics
+from src.models.akshare_v10 import RawMacroIndicator
 
 __all__ = [
     "Base", "TimestampMixin",
@@ -164,4 +165,5 @@ __all__ = [
     "RawStockCxg",
     "RawPeerComparison",
     "RawCommodityLogistics",
+    "RawMacroIndicator",
 ]
