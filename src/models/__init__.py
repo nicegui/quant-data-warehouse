@@ -74,6 +74,8 @@ from src.models.us_fundamental import (
     RawUsDividend, RawUsSplit, RawUsRecommendation,
     RawUsInstitutional, RawUsInfo,
 )
+from src.models.qvix import RawQvix, RawEpuIndex
+from src.models.macro_fund import RawSocialFinance, RawFundPosition, RawFundHolding
 from src.models.analyst import RawAnalystRank, RawAnalystDetail
 from src.models.analyst_forecast import RawAnalystForecast
 from src.models.foreign_futures import RawForeignFutures

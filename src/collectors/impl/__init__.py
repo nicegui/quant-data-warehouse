@@ -148,6 +148,9 @@ from src.collectors.impl.kpl_list import KplListCollector
 from src.collectors.impl.kpl_concept import KplConceptCollector
 from src.collectors.impl.dc_concept import DcConceptCollector
 from src.collectors.impl.dc_concept_cons import DcConceptConsCollector
+from src.collectors.impl.qvix import QvixCollector, EpuCollector
+from src.collectors.impl.social_finance import SocialFinanceCollector
+from src.collectors.impl.fund_position import FundPositionCollector, FundHoldingCollector
 from src.collectors.impl.analyst_forecast import AnalystForecastCollector
 
 # ── Non-Tushare collectors (2026-05-01) ──

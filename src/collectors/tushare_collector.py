@@ -169,6 +169,9 @@ from src.collectors.impl.foreign_futures import ForeignFuturesCollector
 from src.collectors.impl.akshare_macro import AkshareMacroCollector
 from src.collectors.impl.akshare_hsgt import AkshareHsgtCollector
 from src.collectors.impl.baostock_basic import BaostockBasicCollector
+from src.collectors.impl.qvix import QvixCollector, EpuCollector
+from src.collectors.impl.social_finance import SocialFinanceCollector
+from src.collectors.impl.fund_position import FundPositionCollector, FundHoldingCollector
 from src.collectors.impl.analyst_forecast import AnalystForecastCollector
 
 
