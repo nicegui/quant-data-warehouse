@@ -48,17 +48,5 @@ class NameChangeCollector(BaseTushareCollector):
                 "raw_json": json.dumps(row, ensure_ascii=False, default=str),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawNameChange).filter_by(
-                    ts_code=rec["ts_code"],
-                    start_date=rec.get("start_date"),
-                ).first()
-                if existing:
-                    continue
-                session.add(RawNameChange(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawNameChange, records, ["ts_code", "start_date"])

@@ -16,6 +16,7 @@ from src.models.fundamental import (
     RawRepurchase, RawPledgeStat, RawPledgeDetail, RawStkHolderFloatTop,
     RawStkManagers, RawStkRewards,
 )
+from src.models.income import RawIncome
 from src.models.reference import RefStockBasic, RefTradeCal, RefAdjFactor, RawNewShare, RawNameChange, RefDisclosureDate, RawBakBasic
 from src.models.pipeline import PipelineLog
 from src.models.sentiment import RawTopInst, RawStkLimit, RawLimitList, RawTopList, RawCyqChips, RawCyqPerf, RawStkShock, RawStkHighShock, RawStkAlert, RawLimitListThs, RawLimitListD, RawLimitStep, RawLimitCptList
@@ -99,6 +100,9 @@ from src.models.akshare_v7 import RawStockCxg
 from src.models.akshare_v8 import RawPeerComparison
 from src.models.akshare_v9 import RawCommodityLogistics
 from src.models.akshare_v10 import RawMacroIndicator
+from src.models.polymarket import (
+    RawPolymarketEvent, RawPolymarketMarket, RawPolymarketPrice,
+)
 
 __all__ = [
     "Base", "TimestampMixin",
@@ -109,7 +113,7 @@ __all__ = [
     "RawBlockTrade", "RawStkAccount", "RawShareFloat",
     "RawConsultation", "RawMajorNews", "RawCctvNews",
     "RawFinancialReports", "RawFinancialIndicators",
-    "RawExpress", "RawBalanceSheet", "RawCashFlow",
+    "RawExpress", "RawBalanceSheet", "RawCashFlow", "RawIncome",
     "RefStockBasic", "RefTradeCal", "RefAdjFactor", "RawNewShare", "RawNameChange", "RefDisclosureDate",
     "PipelineLog",
     "RawTopInst", "RawStkLimit", "RawLimitList", "RawTopList", "RawCyqChips", "RawCyqPerf", "RawStkShock", "RawStkHighShock", "RawStkAlert",
@@ -166,4 +170,5 @@ __all__ = [
     "RawPeerComparison",
     "RawCommodityLogistics",
     "RawMacroIndicator",
+    "RawPolymarketEvent", "RawPolymarketMarket", "RawPolymarketPrice",
 ]

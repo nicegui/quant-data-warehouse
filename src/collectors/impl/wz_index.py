@@ -18,10 +18,5 @@ class WzIndexCollector(BaseTushareCollector):
         nf=("comp_rate","center_rate","micro_rate","cm_rate","sdb_rate","om_rate","aa_rate","m1_rate","m3_rate","m6_rate","m12_rate","long_rate")
         for x in raw: r.append({k:_f(x.get(k))if k in nf else x.get(k)for k in("date","comp_rate","center_rate","micro_rate","cm_rate","sdb_rate","om_rate","aa_rate","m1_rate","m3_rate","m6_rate","m12_rate","long_rate")})
         return r
-    def store_raw(self,recs):
-        w=0
-        with db_session()as s:
-            for r in recs:
-                e=s.query(RawWzIndex).filter_by(date=r["date"]).first()
-                if not e:s.add(RawWzIndex(**r));w+=1
-        return w
+    def store_raw(self, records: list[dict]) -> int:
+        return self._store_dedup(RawWzIndex, records, ["date"])

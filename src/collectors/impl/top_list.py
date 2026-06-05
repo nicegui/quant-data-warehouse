@@ -62,20 +62,9 @@ class TopListCollector(BaseTushareCollector):
             }
             validated.append(rec)
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawTopList).filter_by(
-                    ts_code=rec["ts_code"],
-                    trade_date=rec["trade_date"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawTopList(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawTopList, records, ["ts_code", "trade_date"])
+
 
     def _get_existing_dates(self) -> set[str]:
         try:

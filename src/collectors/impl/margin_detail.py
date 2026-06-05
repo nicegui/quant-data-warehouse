@@ -63,23 +63,9 @@ class MarginDetailCollector(BaseTushareCollector):
                 "raw_json": json.dumps(row, ensure_ascii=False, default=str),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        from sqlalchemy import text
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawMarginDetail).filter_by(
-                    trade_date=rec["trade_date"],
-                    ts_code=rec["ts_code"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawMarginDetail(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawMarginDetail, records, ["trade_date", "ts_code"])
 
-    # ── Date-loop Run ──────────────────────────────
 
     def run(self, **kwargs) -> dict:
         """Loop forward through trading days (oldest→newest), fetch, validate, store."""

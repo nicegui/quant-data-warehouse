@@ -46,17 +46,5 @@ class StkMinsCollector(BaseTushareCollector):
                 "amount": _f(row.get("amount")),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawStkMins).filter_by(
-                    ts_code=rec["ts_code"],
-                    trade_time=rec["trade_time"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawStkMins(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawStkMins, records, ["ts_code", "trade_time"])

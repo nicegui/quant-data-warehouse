@@ -56,25 +56,7 @@ class DcHotCollector(BaseTushareCollector):
         return validated
 
     def store_raw(self, records: list[dict]) -> int:
-        if not records:
-            return 0
-        written = 0
-        with db_session() as session:
-            keys = {(r["trade_date"], r["ts_code"], r["market"], r["hot_type"], r["rank_time"]) for r in records}
-            existing_rows = session.query(
-                RawDcHot.trade_date, RawDcHot.ts_code, RawDcHot.market,
-                RawDcHot.hot_type, RawDcHot.rank_time,
-            ).filter(
-                RawDcHot.trade_date.in_([k[0] for k in keys])
-            ).all()
-            existing_set = {(r.trade_date, r.ts_code, r.market, r.hot_type, r.rank_time) for r in existing_rows}
-            for rec in records:
-                key = (rec["trade_date"], rec["ts_code"], rec["market"], rec["hot_type"], rec["rank_time"])
-                if key in existing_set:
-                    continue
-                session.add(RawDcHot(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawDcHot, records, ["trade_date", "ts_code", "market", "hot_type", "rank_time"])
 
     def run(self, **kwargs) -> dict:
         last_date = self.get_checkpoint_date()

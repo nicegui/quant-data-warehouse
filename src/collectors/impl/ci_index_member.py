@@ -63,16 +63,8 @@ class CiIndexMemberCollector(BaseTushareCollector):
                 raw = self.fetch(ts_code=ts_code)
                 if raw:
                     validated = self.validate(raw)
-                    with db_session() as s:
-                        for rec in validated:
-                            existing = s.query(RawCiIndexMember).filter_by(
-                                ts_code=rec["ts_code"],
-                                l3_code=rec["l3_code"],
-                            ).first()
-                            if not existing:
-                                s.add(RawCiIndexMember(**rec))
-                                total += 1
-                        s.commit()
+                    written = self._store_dedup(RawCiIndexMember, validated, ["ts_code", "l3_code"])
+                    total += written
             except Exception as e:
                 logger.error(f"[{ts_code}] ERROR: {e}")
                 errors += 1

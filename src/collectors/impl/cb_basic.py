@@ -57,16 +57,5 @@ class CbBasicCollector(BaseTushareCollector):
                 "rate_clause": row.get("rate_clause"),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RefCbBasic).filter_by(
-                    ts_code=rec["ts_code"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RefCbBasic(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RefCbBasic, records, ["ts_code"])

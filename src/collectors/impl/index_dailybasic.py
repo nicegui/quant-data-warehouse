@@ -32,13 +32,8 @@ class IndexDailyBasicCollector(BaseTushareCollector):
             result.append({k: _f(r.get(k)) if k.startswith(("total","float","free","turn","pe","pb")) else r.get(k) for k in fields})
         return result
 
-    def store_raw(self, recs):
-        w = 0
-        with db_session() as s:
-            for r in recs:
-                e = s.query(RawIndexDailyBasic).filter_by(ts_code=r["ts_code"], trade_date=r["trade_date"]).first()
-                if not e: s.add(RawIndexDailyBasic(**r)); w += 1
-        return w
+    def store_raw(self, records: list[dict]) -> int:
+        return self._store_dedup(RawIndexDailyBasic, records, ["ts_code", "trade_date"])
 
     def run(self) -> dict:
         import time, logging

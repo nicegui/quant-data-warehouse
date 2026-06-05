@@ -63,20 +63,9 @@ class ThsDailyCollector(BaseTushareCollector):
             }
             validated.append(rec)
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawThsDaily).filter_by(
-                    ts_code=rec["ts_code"],
-                    trade_date=rec["trade_date"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawThsDaily(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawThsDaily, records, ["ts_code", "trade_date"])
+
 
     def _get_index_codes(self) -> list[str]:
         try:

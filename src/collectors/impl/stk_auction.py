@@ -28,11 +28,5 @@ class StkAuctionCollector(BaseTushareCollector):
             result.append({k: r.get(k) for k in ("ts_code","trade_date","vol","price","amount","pre_close","turnover_rate","volume_ratio","float_share")})
         return result
 
-    def store_raw(self, recs):
-        w = 0
-        with db_session() as s:
-            for r in recs:
-                e = s.query(RawStkAuction).filter_by(ts_code=r["ts_code"], trade_date=r["trade_date"]).first()
-                if not e:
-                    s.add(RawStkAuction(**r)); w += 1
-        return w
+    def store_raw(self, records: list[dict]) -> int:
+        return self._store_dedup(RawStkAuction, records, ["ts_code", "trade_date"])

@@ -53,18 +53,5 @@ class FutHoldingCollector(BaseTushareCollector):
                 "short_chg": _f(row.get("short_chg")),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawFutHolding).filter_by(
-                    trade_date=rec["trade_date"],
-                    symbol=rec["symbol"],
-                    broker=rec["broker"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawFutHolding(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawFutHolding, records, ["trade_date", "symbol", "broker"])

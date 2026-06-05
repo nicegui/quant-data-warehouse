@@ -50,16 +50,4 @@ class FutWsrCollector(BaseTushareCollector):
         return validated
 
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawFutWsr).filter_by(
-                    trade_date=rec["trade_date"],
-                    symbol=rec["symbol"],
-                    warehouse=rec["warehouse"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawFutWsr(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawFutWsr, records, ["trade_date", "symbol", "warehouse"])

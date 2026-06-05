@@ -29,10 +29,10 @@ class RawIncome(TimestampMixin, Base):
     ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True, comment="股票代码")
     ann_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="公告日期")
     f_ann_date: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="实际公告日期")
-    end_date: Mapped[datetime] = mapped_column(nullable=False, index=True, comment="报告期")
+    end_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True, comment="报告期")
     report_type: Mapped[Optional[str]] = mapped_column(String(8), nullable=True, comment="报告类型")
-    comp_type: Mapped[Optional[str]] = mapped_column(String(1), nullable=True, comment="公司类型")
-    end_type: Mapped[Optional[str]] = mapped_column(String(1), nullable=True, comment="报告期类型")
+    comp_type: Mapped[Optional[str]] = mapped_column(String(10), nullable=True, comment="公司类型")
+    end_type: Mapped[Optional[str]] = mapped_column(String(10), nullable=True, comment="报告期类型")
 
     # ── 每股指标 ──
     basic_eps: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="基本每股收益")
@@ -147,8 +147,8 @@ class RawIncome(TimestampMixin, Base):
     end_net_profit: Mapped[Optional[float]] = mapped_column(Float, nullable=True, comment="终止经营净利润")
 
     # ── 元数据 ──
-    update_flag: Mapped[Optional[str]] = mapped_column(String(1), nullable=True, comment="更新标识")
+    update_flag: Mapped[Optional[str]] = mapped_column(String(10), nullable=True, comment="更新标识")
     raw_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True, comment="完整API响应")
 
     def __repr__(self):
-        return f"<RawIncome({self.ts_code} {self.end_date:%Y%m%d} rpt={self.report_type})>"
+        return f"<RawIncome({self.ts_code} {self.end_date} rpt={self.report_type})>"

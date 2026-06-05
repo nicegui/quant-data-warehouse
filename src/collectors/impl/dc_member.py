@@ -56,25 +56,7 @@ class DcMemberCollector(BaseTushareCollector):
         return validated
 
     def store_raw(self, records: list[dict]) -> int:
-        if not records:
-            return 0
-        written = 0
-        with db_session() as session:
-            # batch dedup: one query per batch
-            keys = {(r["trade_date"], r["ts_code"], r["con_code"]) for r in records}
-            existing_rows = session.query(
-                RawDcMember.trade_date, RawDcMember.ts_code, RawDcMember.con_code
-            ).filter(
-                RawDcMember.trade_date.in_([k[0] for k in keys])
-            ).all()
-            existing_set = {(r.trade_date, r.ts_code, r.con_code) for r in existing_rows}
-            for rec in records:
-                key = (rec["trade_date"], rec["ts_code"], rec["con_code"])
-                if key in existing_set:
-                    continue
-                session.add(RawDcMember(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawDcMember, records, ["trade_date", "ts_code", "con_code"])
 
     def run(self, **kwargs) -> dict:
         last_date = self.get_checkpoint_date()

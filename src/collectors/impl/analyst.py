@@ -134,18 +134,30 @@ class AnalystCollector(BaseAKShareCollector):
         Uses analyst_id from the ranking to query each analyst's coverage.
         """
         from src.db.session import db_session
-        from sqlalchemy import text
-
-        with db_session() as s:
-            r = s.execute(
-                text(
-                    "SELECT analyst_id FROM raw_analyst_rank "
-                    "WHERE analyst_id IS NOT NULL AND analyst_id != '' "
-                    "GROUP BY analyst_id ORDER BY MIN(rank) LIMIT :n"
-                ),
-                {"n": top_n},
+        ids: list[str] = []
+        try:
+            from src.db import nas_duckdb
+            result = nas_duckdb.query(
+                f"SELECT analyst_id FROM raw_analyst_rank "
+                f"WHERE analyst_id IS NOT NULL AND analyst_id != '' "
+                f"GROUP BY analyst_id ORDER BY MIN(rank) LIMIT {top_n}"
             )
-            ids = [row[0] for row in r]
+            ids = [r["analyst_id"] for r in result if r.get("analyst_id")]
+        except Exception:
+            try:
+                from sqlalchemy import text
+                with db_session() as s:
+                    r = s.execute(
+                        text(
+                            "SELECT analyst_id FROM raw_analyst_rank "
+                            "WHERE analyst_id IS NOT NULL AND analyst_id != '' "
+                            "GROUP BY analyst_id ORDER BY MIN(rank) LIMIT :n"
+                        ),
+                        {"n": top_n},
+                    )
+                    ids = [row[0] for row in r]
+            except Exception:
+                pass
 
         if not ids:
             print("[analyst_detail] No analyst_ids found in rank data. Run run_rank() first.")

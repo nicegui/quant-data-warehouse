@@ -47,17 +47,7 @@ class DailyInfoCollector(BaseTushareCollector):
         return validated
 
     def store_raw(self, records: list[dict]) -> int:
-        from src.db.session import db_session
-        w = 0
-        with db_session() as s:
-            for r in records:
-                e = s.query(RawDailyInfo).filter_by(
-                    trade_date=r["trade_date"], ts_code=r["ts_code"]
-                ).first()
-                if not e:
-                    s.add(RawDailyInfo(**r))
-                    w += 1
-        return w
+        return self._store_dedup(RawDailyInfo, records, ["trade_date", "ts_code"])
 
     def run(self) -> dict:
         t0 = time.time()

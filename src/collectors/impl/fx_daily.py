@@ -20,10 +20,5 @@ class FxDailyCollector(BaseTushareCollector):
         for x in raw:
             r.append({k:_f(x.get(k))if k in nf else x.get(k)for k in("ts_code","trade_date","bid_open","bid_close","bid_high","bid_low","ask_open","ask_close","ask_high","ask_low","tick_qty")})
         return r
-    def store_raw(self,recs):
-        w=0
-        with db_session()as s:
-            for r in recs:
-                e=s.query(RawFxDaily).filter_by(ts_code=r["ts_code"],trade_date=r["trade_date"]).first()
-                if not e:s.add(RawFxDaily(**r));w+=1
-        return w
+    def store_raw(self, records: list[dict]) -> int:
+        return self._store_dedup(RawFxDaily, records, ["ts_code", "trade_date"])

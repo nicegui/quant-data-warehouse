@@ -53,24 +53,7 @@ class HmDetailCollector(BaseTushareCollector):
         return validated
 
     def store_raw(self, records: list[dict]) -> int:
-        if not records:
-            return 0
-        written = 0
-        with db_session() as session:
-            keys = {(r["trade_date"], r["ts_code"], r["hm_name"]) for r in records}
-            existing_rows = session.query(
-                RawHmDetail.trade_date, RawHmDetail.ts_code, RawHmDetail.hm_name
-            ).filter(
-                RawHmDetail.trade_date.in_([k[0] for k in keys])
-            ).all()
-            existing_set = {(r.trade_date, r.ts_code, r.hm_name) for r in existing_rows}
-            for rec in records:
-                key = (rec["trade_date"], rec["ts_code"], rec["hm_name"])
-                if key in existing_set:
-                    continue
-                session.add(RawHmDetail(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawHmDetail, records, ["trade_date", "ts_code", "hm_name"])
 
     def run(self, **kwargs) -> dict:
         last_date = self.get_checkpoint_date()

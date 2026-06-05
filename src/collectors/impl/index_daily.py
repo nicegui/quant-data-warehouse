@@ -30,25 +30,12 @@ class IndexCollector(BaseTushareCollector):
         return self.api_call("index_daily", **params)
 
     def store_index(self, records: list[dict]) -> int:
-        """Bulk-insert index daily with ON CONFLICT dedup."""
+        """Bulk-insert index daily with dedup via _store_dedup."""
         if not records:
             return 0
-        from sqlalchemy import text
-        with db_session() as session:
-            result = session.execute(
-                text("""
-                    INSERT INTO raw_index_daily
-                        (ts_code, trade_date, \"open\", high, low, close,
-                         pre_close, change, pct_chg, vol, amount)
-                    VALUES
-                        (:ts_code, :trade_date, :open, :high, :low, :close,
-                         :pre_close, :change, :pct_chg, :vol, :amount)
-                    ON CONFLICT (ts_code, trade_date) DO NOTHING
-                """),
-                records,  # list of dicts → SQLAlchemy executemany
-            )
-            written = result.rowcount
-        return written
+        return self._store_dedup(
+            RawIndexDaily, records, ["ts_code", "trade_date"]
+        )
 
     # ── 申万行业指数 ──
 
@@ -64,18 +51,7 @@ class IndexCollector(BaseTushareCollector):
         return self.api_call("sw_daily", **params)
 
     def store_sw_daily(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawSwDaily).filter_by(
-                    ts_code=rec["ts_code"],
-                    trade_date=rec["trade_date"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawSwDaily(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawSwDaily, records, ["ts_code", "trade_date"])
 
     # ── 指数成分权重 ──
 
@@ -89,19 +65,10 @@ class IndexCollector(BaseTushareCollector):
         return self.api_call("index_weight", index_code=index_code, trade_date=trade_date)
 
     def store_index_weight(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawIndexWeight).filter_by(
-                    index_code=rec["index_code"],
-                    con_code=rec["con_code"],
-                    trade_date=rec.get("trade_date"),
-                ).first()
-                if existing:
-                    continue
-                session.add(RawIndexWeight(**rec))
-                written += 1
-        return written
+        return self._store_dedup(
+            RawIndexWeight, records,
+            ["index_code", "con_code", "trade_date"]
+        )
 
     # ── 抽象接口桩 ──
     def fetch(self, **kwargs) -> list[dict]:
@@ -118,18 +85,26 @@ class IndexCollector(BaseTushareCollector):
     def run(self) -> dict:
         """Iterate all index codes, fetch full daily history per code."""
         import time, logging
-        from src.db.session import get_session
+        from src.db import nas_duckdb
         logger = logging.getLogger(__name__)
 
         t0 = time.time()
         total_written = 0
         errors = 0
 
-        # Get all index codes
-        from sqlalchemy import text
-        session = get_session()
-        indices = [r[0] for r in session.execute(text("SELECT ts_code FROM ref_index_basic")).fetchall()]
-        session.close()
+        # Get all index codes from NAS
+        indices = []
+        try:
+            result = nas_duckdb.query("SELECT ts_code FROM ref_index_basic")
+            indices = [row[0] for row in result["rows"]]
+        except Exception as e:
+            logger.error(f"Failed to read ref_index_basic from NAS: {e}")
+            # Fallback to local
+            from sqlalchemy import text
+            from src.db.engine import get_session
+            session = get_session()
+            indices = [r[0] for r in session.execute(text("SELECT ts_code FROM ref_index_basic")).fetchall()]
+            session.close()
 
         logger.info(f"Found {len(indices)} index codes")
 

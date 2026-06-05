@@ -171,6 +171,7 @@ from src.collectors.impl.analyst_forecast import AnalystForecastCollector
 from src.collectors.impl.akshare_macro import AkshareMacroCollector
 from src.collectors.impl.akshare_hsgt import AkshareHsgtCollector
 from src.collectors.impl.baostock_basic import BaostockBasicCollector
+from src.collectors.impl.polymarket import PolymarketCollector
 
 
 __all__ = [
@@ -275,8 +276,9 @@ __all__ = [
     "KplConceptCollector",
     "DcConceptCollector",
     "DcConceptConsCollector",
-    # Non-Tushare collectors (akshare / baostock)
+    # Non-Tushare collectors (akshare / baostock / polymarket)
     "AkshareMacroCollector", "AkshareHsgtCollector", "BaostockBasicCollector",
+    "PolymarketCollector",
     "QvixCollector", "EpuCollector", "SocialFinanceCollector",
     "AnalystForecastCollector", "FundPositionCollector", "FundPortfolioCollector",
     "AkshareV2Collector",

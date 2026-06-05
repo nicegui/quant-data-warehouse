@@ -23,17 +23,7 @@ class ConceptCollector(BaseTushareCollector):
         return self.api_call("concept")
 
     def store_concepts(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RefConcept).filter_by(
-                    code=rec["code"]
-                ).first()
-                if existing:
-                    continue
-                session.add(RefConcept(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RefConcept, records, ["code"])
 
     # ── concept_detail ──
 
@@ -58,19 +48,10 @@ class ConceptCollector(BaseTushareCollector):
         }
 
     def store_concept_detail(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                row = self._rename_detail(rec)
-                existing = session.query(RefConceptDetail).filter_by(
-                    concept_code=row["concept_code"],
-                    ts_code=row["ts_code"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RefConceptDetail(**row))
-                written += 1
-        return written
+        if not records:
+            return 0
+        rows = [self._rename_detail(rec) for rec in records]
+        return self._store_dedup(RefConceptDetail, rows, ["concept_code", "ts_code"])
 
     # ── ths_member ──
 

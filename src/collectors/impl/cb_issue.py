@@ -59,17 +59,5 @@ class CbIssueCollector(BaseTushareCollector):
                 "offl_size": _f(row.get("offl_size")),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawCbIssue).filter_by(
-                    ts_code=rec["ts_code"],
-                    ann_date=rec["ann_date"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawCbIssue(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawCbIssue, records, ["ts_code", "ann_date"])

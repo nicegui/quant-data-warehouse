@@ -20,13 +20,8 @@ class OptDailyCollector(BaseTushareCollector):
         for x in raw:
             r.append({k:_f(x.get(k))if k in nf else x.get(k)for k in("ts_code","trade_date","exchange","pre_settle","pre_close","open","high","low","close","settle","vol","amount","oi")})
         return r
-    def store_raw(self,recs):
-        w=0
-        with db_session()as s:
-            for r in recs:
-                e=s.query(RawOptDaily).filter_by(ts_code=r["ts_code"],trade_date=r["trade_date"]).first()
-                if not e:s.add(RawOptDaily(**r));w+=1
-        return w
+    def store_raw(self, records: list[dict]) -> int:
+        return self._store_dedup(RawOptDaily, records, ["ts_code", "trade_date"])
 
     def run(self) -> dict:
         import time, logging

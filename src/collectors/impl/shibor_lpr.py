@@ -17,10 +17,5 @@ class ShiborLprCollector(BaseTushareCollector):
         r=[]
         for x in raw: r.append({"date":x.get("date"),"y1":_f(x.get("1y")),"y5":_f(x.get("5y"))})
         return r
-    def store_raw(self,recs):
-        w=0
-        with db_session()as s:
-            for r in recs:
-                e=s.query(RawShiborLpr).filter_by(date=r["date"]).first()
-                if not e:s.add(RawShiborLpr(**r));w+=1
-        return w
+    def store_raw(self, records: list[dict]) -> int:
+        return self._store_dedup(RawShiborLpr, records, ["date"])

@@ -55,24 +55,9 @@ class IndexBasicCollector(BaseTushareCollector):
                 "raw_json": json.dumps(row, ensure_ascii=False, default=str),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        """Upsert index basic reference data by ts_code."""
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RefIndexBasic).filter_by(
-                    ts_code=rec["ts_code"],
-                ).first()
-                if existing:
-                    # Update all fields
-                    for key, val in rec.items():
-                        setattr(existing, key, val)
-                    session.add(existing)
-                else:
-                    session.add(RefIndexBasic(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RefIndexBasic, records, ["ts_code"])
+
 
     def run(self) -> dict:
         """Full fetch: all markets, upsert into ref_index_basic."""

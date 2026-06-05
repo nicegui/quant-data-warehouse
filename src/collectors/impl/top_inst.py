@@ -49,23 +49,9 @@ class TopInstCollector(BaseTushareCollector):
                 "raw_json": json.dumps(row, ensure_ascii=False, default=str),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawTopInst).filter_by(
-                    ts_code=rec["ts_code"],
-                    trade_date=rec["trade_date"],
-                    exalter=rec["exalter"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawTopInst(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawTopInst, records, ["ts_code", "trade_date", "exalter"])
 
-    # ── Date-loop Run ──────────────────────────────
 
     def _get_existing_dates(self) -> set[str]:
         try:

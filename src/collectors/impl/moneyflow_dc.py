@@ -68,31 +68,15 @@ class MoneyflowDcCollector(BaseTushareCollector):
         return validated
 
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawMoneyflowDc).filter_by(
-                    trade_date=rec["trade_date"],
-                    ts_code=rec["ts_code"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawMoneyflowDc(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawMoneyflowDc, records, ["trade_date", "ts_code"])
 
     # ── Date-loop Run ──────────────────────────────
 
     def _get_existing_dates(self) -> set[str]:
         try:
-            from src.db.session import get_session
-            from sqlalchemy import text
-            session = get_session()
-            rows = session.execute(
-                text("SELECT DISTINCT trade_date FROM raw_moneyflow_dc")
-            ).fetchall()
-            session.close()
-            return {r[0] for r in rows}
+            from src.db import nas_duckdb
+            result = nas_duckdb.query("SELECT DISTINCT trade_date FROM raw_moneyflow_dc")
+            return {row[0] for row in result["rows"]}
         except Exception:
             return set()
 

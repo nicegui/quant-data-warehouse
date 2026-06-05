@@ -74,21 +74,9 @@ class LimitListThsCollector(BaseTushareCollector):
             }
             validated.append(rec)
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawLimitListThs).filter_by(
-                    trade_date=rec["trade_date"],
-                    ts_code=rec["ts_code"],
-                    limit_type=rec["limit_type"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawLimitListThs(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawLimitListThs, records, ["trade_date", "ts_code", "limit_type"])
+
 
     def _get_existing_dates(self) -> set[str]:
         try:

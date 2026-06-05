@@ -11,10 +11,5 @@ class HkBasicCollector(BaseTushareCollector):
         r=[]
         for x in raw: r.append({k:x.get(k)for k in("ts_code","name","fullname","enname","cn_spell","market","list_status","list_date","delist_date","trade_unit","isin","curr_type")})
         return r
-    def store_raw(self,recs):
-        w=0
-        with db_session()as s:
-            for r in recs:
-                e=s.query(RefHkBasic).filter_by(ts_code=r["ts_code"]).first()
-                if not e:s.add(RefHkBasic(**r));w+=1
-        return w
+    def store_raw(self, records: list[dict]) -> int:
+        return self._store_dedup(RefHkBasic, records, ["ts_code"])

@@ -18,10 +18,5 @@ class GgtMonthlyCollector(BaseTushareCollector):
         nf=("day_buy_amt","day_buy_vol","day_sell_amt","day_sell_vol","total_buy_amt","total_buy_vol","total_sell_amt","total_sell_vol")
         for x in raw: r.append({k:_f(x.get(k))if k in nf else x.get(k)for k in("month","day_buy_amt","day_buy_vol","day_sell_amt","day_sell_vol","total_buy_amt","total_buy_vol","total_sell_amt","total_sell_vol")})
         return r
-    def store_raw(self,recs):
-        w=0
-        with db_session()as s:
-            for r in recs:
-                e=s.query(RawGgtMonthly).filter_by(month=r["month"]).first()
-                if not e:s.add(RawGgtMonthly(**r));w+=1
-        return w
+    def store_raw(self, records: list[dict]) -> int:
+        return self._store_dedup(RawGgtMonthly, records, ["month"])

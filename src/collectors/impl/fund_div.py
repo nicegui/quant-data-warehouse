@@ -55,17 +55,5 @@ class FundDivCollector(BaseTushareCollector):
                 "base_year": row.get("base_year"),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawFundDiv).filter_by(
-                    ts_code=rec["ts_code"],
-                    ann_date=rec["ann_date"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawFundDiv(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawFundDiv, records, ["ts_code", "ann_date"])

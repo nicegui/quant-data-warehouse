@@ -51,17 +51,5 @@ class NewShareCollector(BaseTushareCollector):
                 "raw_json": json.dumps(row, ensure_ascii=False, default=str),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawNewShare).filter_by(
-                    ts_code=rec["ts_code"],
-                    sub_code=rec.get("sub_code", ""),
-                ).first()
-                if existing:
-                    continue
-                session.add(RawNewShare(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawNewShare, records, ["ts_code", "sub_code"])

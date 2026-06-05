@@ -12,6 +12,7 @@
     src/factors/sentiment.py   — 情绪(xq_attention, ...)
     src/factors/liquidity.py   — 流动性(ln_cap, turnover_1m, ...)
     src/factors/macro_state.py — 宏观(market_pe_pct, bdi_momentum, ...)
+    src/factors/alpha158.py    — Alpha158 价量因子 (158个)
 """
 
 from __future__ import annotations
@@ -19,10 +20,38 @@ import pandas as pd
 from typing import Callable, Optional
 
 from src.factors import value, momentum, volatility, quality, growth, sentiment, liquidity, macro_state
-from src.factors.utils import save_factor
+from src.factors.utils import save_factor, process_factor
+
+# ── Alpha158 infra ──
+from src.factors.alpha158 import _load_ohlcv, KBAR_FACTORIES, PRICE_FACTORIES, make_rolling_factories
+
+# ── WQ101 infra ──
+from src.factors.wq101 import ALPHA_FUNCTIONS as _WQ101_FNS
+from src.factors.wq101 import _prepare_data as _wq101_prep
 
 
-# ── 因子注册表 ──
+def _compute_a158_single(factory, start_date=None, end_date=None) -> pd.DataFrame:
+    """Alpha158 单因子包装：加载数据 → 计算 → 标准化."""
+    ohlcv = _load_ohlcv(start_date, end_date)
+    df = factory(ohlcv)
+    if df.empty:
+        return df
+    return process_factor(df.replace([float('inf'), float('-inf')], float('nan')))
+
+
+def _compute_wq101_single(name, fn, start_date=None, end_date=None) -> pd.DataFrame:
+    """WQ101 单因子包装：准备数据 → 计算 → 标准化."""
+    data = _wq101_prep(start_date, end_date)
+    df = fn(data)
+    if df is None or df.empty:
+        return df if df is not None else pd.DataFrame()
+    return process_factor(df.replace([float('inf'), float('-inf')], float('nan')))
+
+
+# ═══════════════════════════════════════════════════════════
+# 因子注册表
+# ═══════════════════════════════════════════════════════════
+
 FACTOR_REGISTRY: dict[str, tuple[Callable, str, str]] = {
     # (计算函数, 类别, 描述)
     # Value
@@ -75,6 +104,33 @@ FACTOR_REGISTRY: dict[str, tuple[Callable, str, str]] = {
     "margin_balance_ratio":(macro_state.margin_balance_ratio, "macro","融资余额变化"),
 }
 
+# ── Alpha158: Kbar (9) ──
+for _name, _factory in KBAR_FACTORIES:
+    _fn = (lambda f=_factory: lambda start_date=None, end_date=None: _compute_a158_single(f, start_date, end_date))()
+    FACTOR_REGISTRY[_name] = (_fn, "alpha158", f"Alpha158 Kbar: {_name}")
+
+# ── Alpha158: Price (4) ──
+for _name, _factory in PRICE_FACTORIES:
+    _fn = (lambda f=_factory: lambda start_date=None, end_date=None: _compute_a158_single(f, start_date, end_date))()
+    FACTOR_REGISTRY[_name] = (_fn, "alpha158", f"Alpha158 Price: {_name}")
+
+# ── Alpha158: Rolling (145) ──
+for _name, _factory in make_rolling_factories():
+    _fn = (lambda f=_factory: lambda start_date=None, end_date=None: _compute_a158_single(f, start_date, end_date))()
+    # 从名字提取算子+窗口描述
+    _base = _name.rstrip('0123456789')
+    _window = _name[len(_base):]
+    FACTOR_REGISTRY[_name] = (_fn, "alpha158", f"Alpha158 Rolling: {_base} {_window}d")
+
+# ── WQ101 (WorldQuant 101 Alpha) ──
+for _name, _fn in _WQ101_FNS.items():
+    _wrapped = (lambda n=_name, f=_fn: lambda start_date=None, end_date=None: _compute_wq101_single(n, f, start_date, end_date))()
+    FACTOR_REGISTRY[_name] = (_wrapped, "wq101", f"WQ101 Alpha: {_name}")
+
+
+# ═══════════════════════════════════════════════════════════
+# Public API
+# ═══════════════════════════════════════════════════════════
 
 def list_factors(category: Optional[str] = None) -> list[dict]:
     """列出所有因子."""
@@ -90,15 +146,15 @@ def compute_factor(name: str, start_date=None, end_date=None, save: bool = False
     """计算单个因子."""
     if name not in FACTOR_REGISTRY:
         raise KeyError(f"Unknown factor: {name}. Use list_factors() to see available.")
-    
+
     fn, cat, desc = FACTOR_REGISTRY[name]
     print(f"Computing {name} ({cat}): {desc} ...")
     df = fn(start_date=start_date, end_date=end_date)
-    
+
     if save and not df.empty:
         save_factor(df, name)
         print(f"  Saved to data/factors/{name}.parquet")
-    
+
     print(f"  Shape: {df.shape}, coverage: {df.notna().sum().sum()} values")
     return df
 

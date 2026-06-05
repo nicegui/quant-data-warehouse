@@ -54,21 +54,9 @@ class StkAhComparisonCollector(BaseTushareCollector):
                 "raw_json": json.dumps(row, ensure_ascii=False, default=str),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawStkAhComparison).filter_by(
-                    hk_code=rec["hk_code"],
-                    ts_code=rec["ts_code"],
-                    trade_date=rec["trade_date"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawStkAhComparison(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawStkAhComparison, records, ["hk_code", "ts_code", "trade_date"])
+
 
     def run(self, **kwargs) -> dict:
         """按交易日全量获取 AH 比价数据。"""
@@ -87,11 +75,16 @@ class StkAhComparisonCollector(BaseTushareCollector):
 
         existing_dates: set[str] = set()
         try:
-            with db_session() as session:
-                rows = session.query(RawStkAhComparison.trade_date).distinct().all()
-                existing_dates = {r[0] for r in rows if r[0]}
+            from src.db import nas_duckdb
+            result = nas_duckdb.query("SELECT DISTINCT trade_date FROM raw_stk_ah_comparison WHERE trade_date IS NOT NULL")
+            existing_dates = {r["trade_date"] for r in result if r.get("trade_date")}
         except Exception:
-            pass
+            try:
+                with db_session() as session:
+                    rows = session.query(RawStkAhComparison.trade_date).distinct().all()
+                    existing_dates = {r[0] for r in rows if r[0]}
+            except Exception:
+                pass
 
         pending = [d for d in dates if d not in existing_dates]
         if not pending:

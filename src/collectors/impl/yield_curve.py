@@ -47,19 +47,5 @@ class YieldCurveCollector(BaseTushareCollector):
                 "raw_json": json.dumps(row, ensure_ascii=False, default=str),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawYcCb).filter_by(
-                    trade_date=rec["trade_date"],
-                    ts_code=rec["ts_code"],
-                    curve_type=rec["curve_type"],
-                    curve_term=rec["curve_term"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawYcCb(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawYcCb, records, ["trade_date", "ts_code", "curve_type", "curve_term"])

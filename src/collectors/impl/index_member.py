@@ -45,17 +45,28 @@ class IndexMemberCollector(BaseTushareCollector):
         return len(records)
 
     def run(self) -> dict:
-        from sqlalchemy import text
-        from src.db.session import db_session, get_session
+        import time, logging
+        from src.db import nas_duckdb
+        logger = logging.getLogger(__name__)
 
         t0 = time.time()
         total, errors = 0, 0
 
-        session = get_session()
-        l3_codes = [r[0] for r in session.execute(
-            text("SELECT DISTINCT index_code FROM ref_index_classify WHERE level='L3'")
-        ).fetchall()]
-        session.close()
+        # Read L3 codes from NAS
+        l3_codes = []
+        try:
+            result = nas_duckdb.query("SELECT DISTINCT index_code FROM ref_index_classify WHERE level='L3'")
+            l3_codes = [row[0] for row in result["rows"]]
+        except Exception as e:
+            logger.error(f"Failed to read L3 codes from NAS: {e}")
+            # Fallback to local
+            from sqlalchemy import text
+            from src.db.engine import get_session
+            session = get_session()
+            l3_codes = [r[0] for r in session.execute(
+                text("SELECT DISTINCT index_code FROM ref_index_classify WHERE level='L3'")
+            ).fetchall()]
+            session.close()
 
         logger.info(f"Found {len(l3_codes)} L3 industry codes")
 
@@ -64,16 +75,7 @@ class IndexMemberCollector(BaseTushareCollector):
                 raw = self.fetch(l3_code=l3_code)
                 if raw:
                     validated = self.validate(raw)
-                    with db_session() as s:
-                        for rec in validated:
-                            existing = s.query(RawIndexMember).filter_by(
-                                l3_code=rec["l3_code"],
-                                ts_code=rec["ts_code"],
-                            ).first()
-                            if not existing:
-                                s.add(RawIndexMember(**rec))
-                                total += 1
-                        s.commit()
+                    total += self._store_dedup(RawIndexMember, validated, ["l3_code", "ts_code"])
             except Exception as e:
                 logger.error(f"[{l3_code}] ERROR: {e}")
                 errors += 1

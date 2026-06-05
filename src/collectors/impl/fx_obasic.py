@@ -17,10 +17,5 @@ class FxBasicCollector(BaseTushareCollector):
         for x in raw:
             r.append({k:_f(x.get(k))if k in nf else x.get(k)for k in("ts_code","name","classify","exchange","min_unit","max_unit","pip","pip_cost","traget_spread","min_stop_distance","trading_hours","break_time")})
         return r
-    def store_raw(self,recs):
-        w=0
-        with db_session()as s:
-            for r in recs:
-                e=s.query(RefFxBasic).filter_by(ts_code=r["ts_code"]).first()
-                if not e:s.add(RefFxBasic(**r));w+=1
-        return w
+    def store_raw(self, records: list[dict]) -> int:
+        return self._store_dedup(RefFxBasic, records, ["ts_code"])

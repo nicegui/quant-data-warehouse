@@ -82,22 +82,9 @@ class DcConceptCollector(BaseTushareCollector):
                 raw = self.fetch(trade_date=d_str)
                 if raw:
                     validated = self.validate(raw)
-                    with db_session() as session:
-                        # Dedup by (theme_code, trade_date)
-                        for rec in validated:
-                            existing = session.query(RawDcConcept).filter_by(
-                                theme_code=rec["theme_code"],
-                                trade_date=rec["trade_date"],
-                            ).first()
-                            if not existing:
-                                session.add(RawDcConcept(**rec))
-                                total_written += 1
-                            else:
-                                for k, v in rec.items():
-                                    if k != "id":
-                                        setattr(existing, k, v)
-                                total_written += 1
-                        session.commit()
+                    total_written += self._store_dedup(
+                        RawDcConcept, validated, ["theme_code", "trade_date"]
+                    )
                     days_processed += 1
                 else:
                     days_processed += 1  # empty day still counts

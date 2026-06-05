@@ -3,6 +3,7 @@
 Tushare stk_factor_pro API: 每日技术面因子数据（261列），覆盖全历史。
 支持并行日期回填 + checkpoint 断点续传。
 """
+
 from __future__ import annotations
 
 import gc
@@ -11,15 +12,15 @@ import logging
 import time
 from typing import Any
 
-import psycopg2
-import psycopg2.extras
+from sqlalchemy import text
 
 from src.collectors.base import BaseTushareCollector
 from src.collectors.impl._utils import _f
+from src.config.settings import settings
+from src.db.session import db_session
 
 logger = logging.getLogger(__name__)
 
-DB_URL = "postgresql:///quantdb"
 TABLE = "raw_stk_factor_pro"
 COLUMNS: list[str] | None = None
 
@@ -55,43 +56,37 @@ class StkFactorProCollector(BaseTushareCollector):
         return validated
 
     def store_raw(self, records: list[dict]) -> int:
-        """Required by base class. Prefer _insert_batch for bulk."""
+        """Store validated records — delegates to _insert_batch."""
         if not records:
             return 0
-        conn = psycopg2.connect(DB_URL)
-        cur = conn.cursor()
-        n = self._insert_batch(conn, cur, records)
-        cur.close()
-        conn.close()
+        with db_session() as session:
+            n = self._insert_batch(session, records)
         return n
 
-    def _insert_batch(self, conn, cur, rows: list[dict]) -> int:
-        """Fast psycopg2 execute_values insert."""
+    def _insert_batch(self, session, rows: list[dict]) -> int:
+        """Bulk INSERT OR IGNORE / ON CONFLICT per backend."""
         global COLUMNS
         if not rows:
             return 0
         if COLUMNS is None:
             COLUMNS = [k for k in rows[0].keys()]
-            # Ensure unique constraint exists
-            cur.execute("""
-                DO $$ BEGIN
-                    ALTER TABLE raw_stk_factor_pro
-                    ADD CONSTRAINT uq_stk_factor_pro_code_date
-                    UNIQUE (ts_code, trade_date);
-                EXCEPTION WHEN duplicate_table THEN NULL;
-                END $$;
-            """)
-            conn.commit()
 
-        template = f"({', '.join(['%s'] * len(COLUMNS))})"
-        values = [tuple(r.get(c) for c in COLUMNS) for r in rows]
-        sql = f"""
-            INSERT INTO {TABLE} ({', '.join(COLUMNS)})
-            VALUES %s
-            ON CONFLICT (ts_code, trade_date) DO NOTHING
-        """
-        psycopg2.extras.execute_values(cur, sql, values, template=template)
-        conn.commit()
+        cols_str = ", ".join(f'"{c}"' for c in COLUMNS)
+        placeholders = ", ".join(":" + c for c in COLUMNS)
+
+        if settings.db_backend == "duckdb":
+            sql = text(
+                f"INSERT OR IGNORE INTO {TABLE} ({cols_str}) "
+                f"VALUES ({placeholders})"
+            )
+        else:
+            sql = text(
+                f"INSERT INTO {TABLE} ({cols_str}) "
+                f"VALUES ({placeholders}) "
+                f"ON CONFLICT (ts_code, trade_date) DO NOTHING"
+            )
+
+        session.execute(sql, rows)
         return len(rows)
 
     # ── Parallel Run ────────────────────────────────────
@@ -99,7 +94,7 @@ class StkFactorProCollector(BaseTushareCollector):
     def run(self, **kwargs) -> dict:
         """并行日期回填，checkpoint 断点续传。
 
-        多线程并发 fetch，单线程 psycopg2 高速写入。
+        多线程并发 fetch，单线程 SQLAlchemy 批量写入。
         """
         # ── Get dates ──
         try:
@@ -111,16 +106,24 @@ class StkFactorProCollector(BaseTushareCollector):
             return {"status": "failed", "error": str(e)}
 
         # ── Skip already-covered dates ──
-        conn = psycopg2.connect(DB_URL)
-        cur = conn.cursor()
+        done_dates: set[str] = set()
         try:
-            cur.execute(f"SELECT trade_date, count(*) FROM {TABLE} GROUP BY trade_date HAVING count(*) >= 3000")
-            done_dates = {str(r[0]) for r in cur.fetchall()}
+            from src.db import nas_duckdb
+            result = nas_duckdb.query(
+                f"SELECT trade_date, count(*) as cnt FROM {TABLE} "
+                f"GROUP BY trade_date HAVING cnt >= 3000"
+            )
+            done_dates = {str(r["trade_date"]) for r in result if r.get("trade_date")}
         except Exception:
-            done_dates = set()
-            conn.rollback()
-        cur.close()
-        conn.close()
+            try:
+                with db_session() as session:
+                    result = session.execute(
+                        text(f"SELECT trade_date, count(*) FROM {TABLE} "
+                             f"GROUP BY trade_date HAVING count(*) >= 3000")
+                    )
+                    done_dates = {str(r[0]) for r in result.fetchall()}
+            except Exception:
+                pass
 
         pending = [d for d in all_dates if d not in done_dates]
         if not pending:
@@ -134,39 +137,34 @@ class StkFactorProCollector(BaseTushareCollector):
         stats = {"fetched": 0, "written": 0, "errors": 0}
         t0 = time.time()
 
-        conn = psycopg2.connect(DB_URL)
-        cur = conn.cursor()
+        with db_session() as session:
+            for i, trade_date in enumerate(pending):
+                time.sleep(0.20)
+                try:
+                    raw = self.fetch(trade_date=trade_date)
+                except Exception as e:
+                    stats["errors"] += 1
+                    if stats["errors"] <= 3:
+                        logger.error("FETCH [%s]: %s", trade_date, e)
+                    continue
+                if raw:
+                    validated = self.validate(raw)
+                    # Write in chunks — avoids giant 5000×261 SQL string
+                    n = 0
+                    for j in range(0, len(validated), 500):
+                        n += self._insert_batch(session, validated[j:j+500])
+                    stats["written"] += n
+                    stats["fetched"] += len(validated)
+                    del raw, validated
+                    gc.collect()
 
-        for i, trade_date in enumerate(pending):
-            time.sleep(0.20)
-            try:
-                raw = self.fetch(trade_date=trade_date)
-            except Exception as e:
-                stats["errors"] += 1
-                if stats["errors"] <= 3:
-                    logger.error("FETCH [%s]: %s", trade_date, e)
-                continue
-            if raw:
-                validated = self.validate(raw)
-                # Write in chunks — avoids giant 5000×261 SQL string
-                n = 0
-                for j in range(0, len(validated), 500):
-                    n += self._insert_batch(conn, cur, validated[j:j+500])
-                stats["written"] += n
-                stats["fetched"] += len(validated)
-                del raw, validated
-                gc.collect()
-
-            done = i + 1
-            if done % 100 == 0:
-                elapsed = time.time() - t0
-                rate = done / elapsed if elapsed > 0 else 0
-                eta = (len(pending) - done) / rate if rate > 0 else 0
-                logger.info("[%d/%d] written=%s rate=%.1fd/s ETA=%.0fs",
-                            done, len(pending), f"{stats['written']:,}", rate, eta)
-
-        cur.close()
-        conn.close()
+                done = i + 1
+                if done % 100 == 0:
+                    elapsed = time.time() - t0
+                    rate = done / elapsed if elapsed > 0 else 0
+                    eta = (len(pending) - done) / rate if rate > 0 else 0
+                    logger.info("[%d/%d] written=%s rate=%.1fd/s ETA=%.0fs",
+                                done, len(pending), f"{stats['written']:,}", rate, eta)
 
         elapsed = time.time() - t0
         return {

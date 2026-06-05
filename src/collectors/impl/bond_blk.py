@@ -19,10 +19,5 @@ class BondBlkCollector(BaseTushareCollector):
         for x in raw:
             r.append({"trade_date":x.get("trade_date"),"ts_code":x.get("ts_code",""),"name":x.get("name"),"price":_f(x.get("price")),"vol":_f(x.get("vol")),"amount":_f(x.get("amount"))})
         return r
-    def store_raw(self,recs):
-        w=0
-        with db_session()as s:
-            for r in recs:
-                e=s.query(RawBondBlk).filter_by(trade_date=r["trade_date"],ts_code=r["ts_code"]).first()
-                if not e:s.add(RawBondBlk(**r));w+=1
-        return w
+    def store_raw(self, records: list[dict]) -> int:
+        return self._store_dedup(RawBondBlk, records, ["trade_date", "ts_code"])

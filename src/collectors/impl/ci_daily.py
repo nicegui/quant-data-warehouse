@@ -32,17 +32,9 @@ class CiDailyCollector(BaseTushareCollector):
                 for k in ("ts_code","trade_date","open","low","high","close","pre_close","change","pct_change","vol","amount")
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        from src.db.session import db_session
-        w = 0
-        with db_session() as s:
-            for r in records:
-                e = s.query(RawCiDaily).filter_by(ts_code=r["ts_code"], trade_date=r["trade_date"]).first()
-                if not e:
-                    s.add(RawCiDaily(**r))
-                    w += 1
-        return w
+        return self._store_dedup(RawCiDaily, records, ["ts_code", "trade_date"])
+
 
     def run(self) -> dict:
         t0 = time.time()

@@ -108,25 +108,10 @@ class ThsCollector(BaseTushareCollector):
         return validated
 
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                if self.sub_api == "ths_daily":
-                    existing = session.query(self._model).filter_by(
-                        ts_code=rec["ts_code"],
-                        trade_date=rec["trade_date"],
-                    ).first()
-                else:  # ths_hot
-                    existing = session.query(self._model).filter_by(
-                        trade_date=rec["trade_date"],
-                        ts_code=rec["ts_code"],
-                        rank_time=rec.get("rank_time"),
-                    ).first()
-                if existing:
-                    continue
-                session.add(self._model(**rec))
-                written += 1
-        return written
+        if self.sub_api == "ths_daily":
+            return self._store_dedup(self._model, records, ["ts_code", "trade_date"])
+        else:  # ths_hot
+            return self._store_dedup(self._model, records, ["trade_date", "ts_code", "rank_time"])
 
     def run(self, **kwargs) -> dict:
         import logging, time

@@ -52,26 +52,7 @@ class ThsMemberCollector(BaseTushareCollector):
         return validated
 
     def store_raw(self, records: list[dict]) -> int:
-        if not records:
-            return 0
-        written = 0
-        with db_session() as session:
-            pairs = {(r["ts_code"], r["con_code"]) for r in records}
-            # batch load existing keys — one query instead of N
-            from sqlalchemy import or_
-            existing_rows = session.query(
-                RawThsMember.ts_code, RawThsMember.con_code
-            ).filter(
-                RawThsMember.ts_code.in_([p[0] for p in pairs])
-            ).all()
-            existing_set = {(row.ts_code, row.con_code) for row in existing_rows}
-            for rec in records:
-                key = (rec["ts_code"], rec["con_code"])
-                if key in existing_set:
-                    continue
-                session.add(RawThsMember(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawThsMember, records, ["ts_code", "con_code"])
 
     def _get_index_codes(self) -> list[str]:
         try:

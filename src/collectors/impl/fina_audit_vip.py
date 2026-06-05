@@ -25,11 +25,4 @@ class FinaAuditVipCollector(BaseTushareCollector):
             validated.append(rec)
         return validated
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawFinaAudit).filter_by(
-                    ts_code=rec["ts_code"], end_date=rec["end_date"]).first()
-                if existing: continue
-                session.add(RawFinaAudit(**rec)); written += 1
-        return written
+        return self._store_dedup(RawFinaAudit, records, ["ts_code", "end_date"])

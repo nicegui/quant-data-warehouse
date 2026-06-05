@@ -48,20 +48,5 @@ class StockCompanyCollector(BaseTushareCollector):
                 rec[f] = v
             result.append(rec)
         return result
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RefStockCompany).filter_by(
-                    ts_code=rec["ts_code"],
-                ).first()
-                if existing:
-                    # Update existing
-                    for k, v in rec.items():
-                        if v is not None and k != "ts_code":
-                            setattr(existing, k, v)
-                else:
-                    session.add(RefStockCompany(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RefStockCompany, records, ["ts_code"])

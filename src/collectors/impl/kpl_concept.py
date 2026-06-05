@@ -85,15 +85,7 @@ class KplConceptCollector(BaseTushareCollector):
         logger.info(f"Got {len(concepts)} concepts")
 
         # Step 1b: Store concept list
-        with db_session() as session:
-            for c in concepts:
-                existing = session.query(RawKplConcept).filter_by(
-                    ts_code=c["ts_code"], trade_date=c["trade_date"]
-                ).first()
-                if not existing:
-                    session.add(RawKplConcept(**c))
-                    total_concepts += 1
-            session.commit()
+        total_concepts += self._store_dedup(RawKplConcept, concepts, ["ts_code", "trade_date"])
 
         # Step 2: Get checkpoint — which concept index to resume from
         last_idx = self.get_checkpoint_date()
@@ -112,17 +104,9 @@ class KplConceptCollector(BaseTushareCollector):
                 raw_cons = self.fetch_cons(ts_code)
                 if raw_cons:
                     validated = self.validate(raw_cons)
-                    with db_session() as session:
-                        for rec in validated:
-                            existing = session.query(RawKplConceptCons).filter_by(
-                                ts_code=rec["ts_code"],
-                                con_code=rec["con_code"],
-                                trade_date=rec["trade_date"],
-                            ).first()
-                            if not existing:
-                                session.add(RawKplConceptCons(**rec))
-                                total_cons += 1
-                        session.commit()
+                    total_cons += self._store_dedup(
+                        RawKplConceptCons, validated, ["ts_code", "con_code", "trade_date"]
+                    )
                     logger.info(f"[{i+1}/{len(concept_codes)}] {ts_code} => {len(raw_cons)} rows")
                 else:
                     logger.info(f"[{i+1}/{len(concept_codes)}] {ts_code} => EMPTY")

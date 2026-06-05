@@ -62,22 +62,9 @@ class FuturesCollector(BaseTushareCollector):
                 "oi_chg": _f(row.get("oi_chg")),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawFutDaily).filter_by(
-                    ts_code=rec["ts_code"],
-                    trade_date=rec["trade_date"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawFutDaily(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawFutDaily, records, ["ts_code", "trade_date"])
 
-    # ── 期货会员持仓 (separate fetch, not using run()) ──
 
     def fetch_fut_holding(self, trade_date: str = "", symbol: str = "") -> list[dict]:
         td = trade_date or dt.now().strftime("%Y%m%d")
@@ -87,16 +74,4 @@ class FuturesCollector(BaseTushareCollector):
         return self.api_call("fut_holding", **params)
 
     def store_fut_holding(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawFutHolding).filter_by(
-                    trade_date=rec["trade_date"],
-                    symbol=rec["symbol"],
-                    broker=rec["broker"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawFutHolding(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawFutHolding, records, ["trade_date", "symbol", "broker"])

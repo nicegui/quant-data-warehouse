@@ -43,21 +43,9 @@ class StkManagersCollector(BaseTushareCollector):
             "edu", "national", "birthday", "begin_date", "end_date",
         )
         return [{k: row.get(k) for k in fields} for row in raw]
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawStkManagers).filter_by(
-                    ts_code=rec["ts_code"],
-                    name=rec.get("name"),
-                    title=rec.get("title"),
-                ).first()
-                if existing:
-                    continue
-                session.add(RawStkManagers(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawStkManagers, records, ["ts_code", "name", "title"])
+
 
     def run(self, **kwargs) -> dict:
         """全市场遍历拉取，支持 checkpoint 断点续传."""
@@ -72,11 +60,16 @@ class StkManagersCollector(BaseTushareCollector):
         # 2. DB 已有股票
         existing_stocks: set[str] = set()
         try:
-            with db_session() as session:
-                rows = session.query(RawStkManagers.ts_code).distinct().all()
-                existing_stocks = {r[0] for r in rows if r[0]}
+            from src.db import nas_duckdb
+            result = nas_duckdb.query("SELECT DISTINCT ts_code FROM raw_stk_managers WHERE ts_code IS NOT NULL")
+            existing_stocks = {r["ts_code"] for r in result if r.get("ts_code")}
         except Exception:
-            pass
+            try:
+                with db_session() as session:
+                    rows = session.query(RawStkManagers.ts_code).distinct().all()
+                    existing_stocks = {r[0] for r in rows if r[0]}
+            except Exception:
+                pass
 
         # 3. Checkpoint
         last_processed = self.get_checkpoint_date() or ""

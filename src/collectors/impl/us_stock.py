@@ -85,17 +85,7 @@ class UsStockCollector(BaseTushareCollector):
         return validated
 
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                q = session.query(self._model).filter_by(
-                    ts_code=rec["ts_code"],
-                )
-                if self.sub_api == "us_daily":
-                    q = q.filter_by(trade_date=rec.get("trade_date"))
-                existing = q.first()
-                if existing:
-                    continue
-                session.add(self._model(**rec))
-                written += 1
-        return written
+        keys = ["ts_code"]
+        if self.sub_api == "us_daily":
+            keys.append("trade_date")
+        return self._store_dedup(self._model, records, keys)

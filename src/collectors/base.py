@@ -10,15 +10,19 @@ Collector hierarchy:
 
 from __future__ import annotations
 
+import logging
 import time
 import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Any, Optional
 
+from src.db import nas_duckdb
 from src.db.session import db_session
 from src.models.pipeline import PipelineLog
 from src.utils.checkpoint import CheckpointManager
+
+logger = logging.getLogger(__name__)
 
 
 class BaseCollector(ABC):
@@ -66,6 +70,9 @@ class BaseCollector(ABC):
     ) -> int:
         """Generic dedup-and-insert helper.
 
+        Primary path: HTTP upsert to NAS DuckDB server.
+        Fallback: local SQLAlchemy (if NAS unreachable).
+
         Args:
             model_cls: SQLAlchemy model class (e.g. RawMarginDetail)
             records: validated dicts with keys matching model columns
@@ -74,6 +81,20 @@ class BaseCollector(ABC):
         Returns:
             Number of records actually written.
         """
+        table_name = model_cls.__tablename__
+
+        # ── Try NAS HTTP first ──
+        try:
+            result = nas_duckdb.upsert(table_name, records, dedup_keys)
+            written = result.get("written", 0)
+            skipped = result.get("skipped", 0)
+            if skipped > 0:
+                logger.debug(f"{self.name}: {table_name} written={written} skipped={skipped}")
+            return written
+        except Exception as e:
+            logger.warning(f"{self.name}: NAS upsert failed ({e}), falling back to local")
+
+        # ── Fallback: local SQLAlchemy ──
         written = 0
         with db_session() as session:
             for rec in records:
@@ -251,10 +272,24 @@ class BaseCollector(ABC):
             config_snapshot=str(config),
         )
         try:
-            with db_session() as session:
-                session.add(record)
+            # Try NAS HTTP first
+            nas_duckdb.insert("pipeline_log", [nas_duckdb._serialize_value.__self__.__dict__ if False else {
+                "pipeline_name": record.pipeline_name,
+                "status": record.status,
+                "started_at": record.started_at,
+                "completed_at": record.completed_at,
+                "duration_seconds": record.duration_seconds,
+                "records_fetched": record.records_fetched,
+                "records_written": record.records_written,
+                "error_message": record.error_message,
+                "config_snapshot": record.config_snapshot,
+            }])
         except Exception:
-            pass  # Don't let audit failure break the pipeline
+            try:
+                with db_session() as session:
+                    session.add(record)
+            except Exception:
+                pass  # Don't let audit failure break the pipeline
 
 
 # ────────────────────────────────────────────

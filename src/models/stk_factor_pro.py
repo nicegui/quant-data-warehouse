@@ -13,7 +13,10 @@ from src.models.base import Base, TimestampMixin
 class RawStkFactorPro(TimestampMixin, Base):
     """股票技术面因子 — 专业版 (stk_factor_pro)."""
     __tablename__ = "raw_stk_factor_pro"
-    __table_args__ = ({"comment": "股票技术面因子(专业版) — 原始数据"},)
+    __table_args__ = (
+        UniqueConstraint("ts_code", "trade_date", name="uq_raw_stk_factor_pro_code_date"),
+        {"comment": "股票技术面因子(专业版) — 原始数据"},
+    )
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     ts_code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
     trade_date: Mapped[str] = mapped_column(String(8), nullable=False, index=True)

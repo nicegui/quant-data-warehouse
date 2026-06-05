@@ -38,17 +38,5 @@ class SuspendCollector(BaseTushareCollector):
                 "suspend_reason": row.get("suspend_reason", ""),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawSuspend).filter_by(
-                    ts_code=rec["ts_code"],
-                    suspend_date=rec["suspend_date"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawSuspend(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawSuspend, records, ["ts_code", "suspend_date"])

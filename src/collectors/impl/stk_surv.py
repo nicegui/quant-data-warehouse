@@ -105,19 +105,7 @@ class StkSurvCollector(BaseTushareCollector):
     # ── Store ───────────────────────────────────────────
 
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawStkSurv).filter_by(
-                    ts_code=rec["ts_code"],
-                    surv_date=rec["surv_date"],
-                    rece_org=rec["rece_org"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawStkSurv(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawStkSurv, records, ["ts_code", "surv_date", "rece_org"])
 
     # ── Run ─────────────────────────────────────────────
 
@@ -132,9 +120,9 @@ class StkSurvCollector(BaseTushareCollector):
 
         existing_stocks: set[str] = set()
         try:
-            with db_session() as session:
-                rows = session.query(RawStkSurv.ts_code).distinct().all()
-                existing_stocks = {r[0] for r in rows if r[0]}
+            from src.db import nas_duckdb
+            result = nas_duckdb.query("SELECT DISTINCT ts_code FROM raw_stk_surv")
+            existing_stocks = {row[0] for row in result["rows"] if row[0]}
         except Exception:
             pass
 

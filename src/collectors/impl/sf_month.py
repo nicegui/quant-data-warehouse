@@ -65,16 +65,5 @@ class SfMonthCollector(BaseTushareCollector):
                 "raw_json": json.dumps(row, ensure_ascii=False, default=str),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawSfMonth).filter_by(
-                    month=rec["month"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawSfMonth(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawSfMonth, records, ["month"])

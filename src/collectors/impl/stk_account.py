@@ -55,14 +55,4 @@ class StkAccountCollector(BaseTushareCollector):
         return validated
 
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawStkAccount).filter_by(
-                    date=rec["date"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawStkAccount(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawStkAccount, records, ["date"])

@@ -44,17 +44,5 @@ class FundAdjCollector(BaseTushareCollector):
                 "adj_factor": _f(row.get("adj_factor")),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawFundAdj).filter_by(
-                    ts_code=rec["ts_code"],
-                    trade_date=rec["trade_date"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawFundAdj(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawFundAdj, records, ["ts_code", "trade_date"])

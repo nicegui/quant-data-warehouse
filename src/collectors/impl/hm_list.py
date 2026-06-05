@@ -33,21 +33,9 @@ class HmListCollector(BaseTushareCollector):
                 "raw_json": json.dumps(x, ensure_ascii=False, default=str),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawHmList).filter_by(name=rec["name"]).first()
-                if existing:
-                    # update existing
-                    existing.desc = rec["desc"]
-                    existing.orgs = rec["orgs"]
-                    existing.raw_json = rec["raw_json"]
-                else:
-                    session.add(RawHmList(**rec))
-                    written += 1
-        return written
+        return self._store_dedup(RawHmList, records, ["name"])
+
 
     def run(self, **kwargs) -> dict:
         raw = self.fetch()

@@ -49,17 +49,5 @@ class MarginTotalCollector(BaseTushareCollector):
                 "rqyl": _f(row.get("rqyl"), 0),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawMarginTotal).filter_by(
-                    trade_date=rec["trade_date"],
-                    exchange_id=rec.get("exchange_id", ""),
-                ).first()
-                if existing:
-                    continue
-                session.add(RawMarginTotal(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawMarginTotal, records, ["trade_date", "exchange_id"])

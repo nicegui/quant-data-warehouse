@@ -49,30 +49,23 @@ class BrokerRecommendCollector(BaseTushareCollector):
                 "raw_json": json.dumps(row, ensure_ascii=False, default=str),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RefBrokerRecommend).filter_by(
-                    month=rec["month"],
-                    broker=rec["broker"],
-                    ts_code=rec["ts_code"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RefBrokerRecommend(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RefBrokerRecommend, records, ["month", "broker", "ts_code"])
+
 
     def run(self, **kwargs) -> dict:
         existing_months: set[str] = set()
         try:
-            with db_session() as session:
-                rows = session.query(RefBrokerRecommend.month).distinct().all()
-                existing_months = {r[0] for r in rows if r[0]}
+            from src.db import nas_duckdb
+            result = nas_duckdb.query("SELECT DISTINCT month FROM ref_broker_recommend WHERE month IS NOT NULL AND month != ''")
+            existing_months = {str(r["month"]) for r in result if r.get("month")}
         except Exception:
-            pass
+            try:
+                with db_session() as session:
+                    rows = session.query(RefBrokerRecommend.month).distinct().all()
+                    existing_months = {r[0] for r in rows if r[0]}
+            except Exception:
+                pass
 
         pending = [m for m in _MONTHS if m not in existing_months]
         if not pending:

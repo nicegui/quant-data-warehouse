@@ -66,24 +66,7 @@ class DcDailyCollector(BaseTushareCollector):
         return validated
 
     def store_raw(self, records: list[dict]) -> int:
-        if not records:
-            return 0
-        written = 0
-        with db_session() as session:
-            keys = {(r["ts_code"], r["trade_date"]) for r in records}
-            existing_rows = session.query(
-                RawDcDaily.ts_code, RawDcDaily.trade_date
-            ).filter(
-                RawDcDaily.trade_date.in_([k[1] for k in keys])
-            ).all()
-            existing_set = {(r.ts_code, r.trade_date) for r in existing_rows}
-            for rec in records:
-                key = (rec["ts_code"], rec["trade_date"])
-                if key in existing_set:
-                    continue
-                session.add(RawDcDaily(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawDcDaily, records, ["ts_code", "trade_date"])
 
     def run(self, **kwargs) -> dict:
         last_date = self.get_checkpoint_date()

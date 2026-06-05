@@ -47,17 +47,5 @@ class FundShareCollector(BaseTushareCollector):
                 "market": row.get("market", ""),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawFundShare).filter_by(
-                    ts_code=rec["ts_code"],
-                    trade_date=rec["trade_date"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawFundShare(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawFundShare, records, ["ts_code", "trade_date"])

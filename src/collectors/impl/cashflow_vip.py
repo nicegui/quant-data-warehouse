@@ -44,18 +44,5 @@ class CashFlowVipCollector(BaseTushareCollector):
             rec["raw_json"] = json.dumps(row, ensure_ascii=False, default=str)
             validated.append(rec)
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawCashFlow).filter_by(
-                    ts_code=rec["ts_code"],
-                    end_date=rec["end_date"],
-                    report_type=rec.get("report_type"),
-                ).first()
-                if existing:
-                    continue
-                session.add(RawCashFlow(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawCashFlow, records, ["ts_code", "end_date", "report_type"])

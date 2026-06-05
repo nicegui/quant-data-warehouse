@@ -45,37 +45,12 @@ class FundCollector(BaseTushareCollector):
                 "amount": _f(row.get("amount")),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawFundDaily).filter_by(
-                    ts_code=rec["ts_code"],
-                    trade_date=rec["trade_date"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawFundDaily(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawFundDaily, records, ["ts_code", "trade_date"])
 
-    # ── 基金持仓 (separate fetch) ──
 
     def fetch_fund_portfolio(self, ts_code: str) -> list[dict]:
         return self.api_call("fund_portfolio", ts_code=ts_code)
 
     def store_fund_portfolio(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawFundPortfolio).filter_by(
-                    ts_code=rec["ts_code"],
-                    end_date=rec["end_date"],
-                    symbol=rec["symbol"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawFundPortfolio(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawFundPortfolio, records, ["ts_code", "end_date", "symbol"])

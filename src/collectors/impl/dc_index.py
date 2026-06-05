@@ -49,20 +49,9 @@ class DcIndexCollector(BaseTushareCollector):
                 "raw_json": json.dumps(row, ensure_ascii=False, default=str),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawDcIndex).filter_by(
-                    ts_code=rec["ts_code"],
-                    trade_date=rec["trade_date"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawDcIndex(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawDcIndex, records, ["ts_code", "trade_date"])
+
 
     def run(self, **kwargs) -> dict:
         import logging, time

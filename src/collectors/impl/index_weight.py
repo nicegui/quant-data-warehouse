@@ -46,21 +46,9 @@ class IndexWeightCollector(BaseTushareCollector):
                 "weight": row.get("weight"),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawIndexWeight).filter_by(
-                    index_code=rec["index_code"],
-                    con_code=rec["con_code"],
-                    trade_date=rec["trade_date"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawIndexWeight(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawIndexWeight, records, ["index_code", "con_code", "trade_date"])
+
 
     def run(self) -> dict:
         import time, logging

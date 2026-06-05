@@ -38,22 +38,9 @@ class ResearchReportCollector(BaseTushareCollector):
                 "url": _s(x.get("url")),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        from src.db.session import db_session
-        w = 0
-        with db_session() as s:
-            for r in records:
-                e = s.query(RawResearchReport).filter_by(
-                    trade_date=r["trade_date"], title=r["title"]
-                ).first()
-                if not e:
-                    s.add(RawResearchReport(**r))
-                    w += 1
-        return w
+        return self._store_dedup(RawResearchReport, records, ["trade_date", "title"])
 
-    # research_report API 限 5次/分钟，12s 间隔 = 5次/分钟刚好不超
-    RATE_LIMIT_SLEEP = 12.5
 
     def run(self) -> dict:
         t0 = time.time()

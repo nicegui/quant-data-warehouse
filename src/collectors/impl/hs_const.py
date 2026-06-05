@@ -12,10 +12,5 @@ class HsConstCollector(BaseTushareCollector):
         r=[]
         for x in raw: r.append({k:x.get(k)for k in("ts_code","hs_type","in_date","out_date","is_new")})
         return r
-    def store_raw(self,recs):
-        w=0
-        with db_session()as s:
-            for r in recs:
-                e=s.query(RefHsConst).filter_by(ts_code=r["ts_code"],hs_type=r["hs_type"]).first()
-                if not e:s.add(RefHsConst(**r));w+=1
-        return w
+    def store_raw(self, records: list[dict]) -> int:
+        return self._store_dedup(RefHsConst, records, ["ts_code", "hs_type"])

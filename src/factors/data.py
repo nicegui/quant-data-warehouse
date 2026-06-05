@@ -1,6 +1,7 @@
 """因子数据读取层."""
 
 from __future__ import annotations
+import numpy as np
 import pandas as pd
 from sqlalchemy import text
 from src.db.engine import get_engine
@@ -40,6 +41,40 @@ def read_stock_daily(start_date=None, end_date=None) -> pd.DataFrame:
     df = _query(sql, params)
     if df.empty: return pd.DataFrame()
     return df.pivot(index="trade_date", columns="ts_code", values="close")
+
+
+def read_ohlcv(start_date=None, end_date=None) -> dict[str, pd.DataFrame]:
+    """读取全量 OHLCV 价量数据，返回各字段的 pivot DataFrame.
+    
+    Returns:
+        {'open': DataFrame, 'high': ..., 'low': ..., 'close': ..., 
+         'volume': ..., 'amount': ..., 'vwap': ...}
+    每张 DataFrame 形状: date × ts_code
+    """
+    conditions = ["close IS NOT NULL", "open IS NOT NULL", "high IS NOT NULL", 
+                   "low IS NOT NULL", "vol IS NOT NULL"]
+    params = {}
+    _add_date_filters(params, conditions, start_date, end_date)
+    sql = f"""
+        SELECT ts_code, trade_date::date AS trade_date, 
+               open, high, low, close, 
+               vol AS volume, amount
+        FROM raw_stock_daily WHERE {' AND '.join(conditions)} ORDER BY trade_date
+    """
+    df = _query(sql, params)
+    if df.empty:
+        return {k: pd.DataFrame() for k in ['open','high','low','close','volume','amount','vwap']}
+    
+    result = {}
+    for field in ['open', 'high', 'low', 'close', 'volume', 'amount']:
+        result[field] = df.pivot(index="trade_date", columns="ts_code", values=field)
+    
+    # 用 amount/volume 近似 vwap
+    piv_amount = df.pivot(index="trade_date", columns="ts_code", values="amount")
+    piv_volume = df.pivot(index="trade_date", columns="ts_code", values="volume")
+    result['vwap'] = (piv_amount / piv_volume.replace(0, np.nan)).fillna(result['close'])
+    
+    return result
 
 
 def read_index_daily(index_code="000300.SH", start_date=None, end_date=None) -> pd.DataFrame:

@@ -27,13 +27,8 @@ class IndexGlobalCollector(BaseTushareCollector):
             result.append({k: _f(r.get(k)) if k in ohcl else r.get(k) for k in ("ts_code","trade_date","open","close","high","low","pre_close","change","pct_chg","swing","vol")})
         return result
 
-    def store_raw(self, recs):
-        w = 0
-        with db_session() as s:
-            for r in recs:
-                e = s.query(RawIndexGlobal).filter_by(ts_code=r["ts_code"], trade_date=r["trade_date"]).first()
-                if not e: s.add(RawIndexGlobal(**r)); w += 1
-        return w
+    def store_raw(self, records: list[dict]) -> int:
+        return self._store_dedup(RawIndexGlobal, records, ["ts_code", "trade_date"])
 
     def run(self) -> dict:
         import time, logging

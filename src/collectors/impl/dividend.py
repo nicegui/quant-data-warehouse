@@ -54,17 +54,5 @@ class DividendCollector(BaseTushareCollector):
                 "imp_ann_date": row.get("imp_ann_date"),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawDividend).filter_by(
-                    ts_code=rec["ts_code"],
-                    ex_date=rec.get("ex_date"),
-                ).first()
-                if existing:
-                    continue
-                session.add(RawDividend(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawDividend, records, ["ts_code", "ex_date"])

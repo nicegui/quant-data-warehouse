@@ -73,17 +73,8 @@ class DcConceptConsCollector(BaseTushareCollector):
                 raw = self.fetch(d_str)
                 if raw:
                     validated = self.validate(raw)
-                    with db_session() as session:
-                        for rec in validated:
-                            existing = session.query(RawDcConceptCons).filter_by(
-                                ts_code=rec["ts_code"],
-                                theme_code=rec["theme_code"],
-                                trade_date=rec["trade_date"],
-                            ).first()
-                            if not existing:
-                                session.add(RawDcConceptCons(**rec))
-                                total_written += 1
-                        session.commit()
+                    written = self._store_dedup(RawDcConceptCons, validated, ["ts_code", "theme_code", "trade_date"])
+                    total_written += written
                 days_processed += 1
             except Exception as e:
                 logger.error(f"[{d_str}] ERROR: {e}")

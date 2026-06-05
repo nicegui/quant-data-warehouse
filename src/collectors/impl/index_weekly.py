@@ -25,13 +25,8 @@ class IndexWeeklyCollector(BaseTushareCollector):
         for x in raw:
             r.append({k:_f(x.get(k))if k in ohcl else x.get(k)for k in("ts_code","trade_date","close","open","high","low","pre_close","change","pct_chg","vol","amount")})
         return r
-    def store_raw(self,recs):
-        w=0
-        with db_session()as s:
-            for r in recs:
-                e=s.query(RawIndexWeekly).filter_by(ts_code=r["ts_code"],trade_date=r["trade_date"]).first()
-                if not e:s.add(RawIndexWeekly(**r));w+=1
-        return w
+    def store_raw(self, records: list[dict]) -> int:
+        return self._store_dedup(RawIndexWeekly, records, ["ts_code", "trade_date"])
 
     def run(self) -> dict:
         import time, logging

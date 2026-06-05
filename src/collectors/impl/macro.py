@@ -32,15 +32,7 @@ class MacroCollector(BaseTushareCollector):
         return self.api_call("cn_cpi", m=end_m) if end_m else self.api_call("cn_cpi")
 
     def store_cpi(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawCnCpi).filter_by(month=rec.get("month")).first()
-                if existing:
-                    continue
-                session.add(RawCnCpi(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawCnCpi, records, ["month"])
 
     # ── PMI ──
 
@@ -48,15 +40,7 @@ class MacroCollector(BaseTushareCollector):
         return self.api_call("cn_pmi", m=end_m) if end_m else self.api_call("cn_pmi")
 
     def store_pmi(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawCnPmi).filter_by(month=rec.get("month")).first()
-                if existing:
-                    continue
-                session.add(RawCnPmi(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawCnPmi, records, ["month"])
 
     # ── GDP ──
 
@@ -64,15 +48,7 @@ class MacroCollector(BaseTushareCollector):
         return self.api_call("cn_gdp")
 
     def store_gdp(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawCnGdp).filter_by(quarter=rec.get("quarter")).first()
-                if existing:
-                    continue
-                session.add(RawCnGdp(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawCnGdp, records, ["quarter"])
 
     # ── Money Supply ──
 
@@ -80,15 +56,7 @@ class MacroCollector(BaseTushareCollector):
         return self.api_call("cn_m", m=end_m) if end_m else self.api_call("cn_m")
 
     def store_money_supply(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawCnMoneySupply).filter_by(month=rec.get("month")).first()
-                if existing:
-                    continue
-                session.add(RawCnMoneySupply(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawCnMoneySupply, records, ["month"])
 
     # ── Shibor ──
 
@@ -96,12 +64,4 @@ class MacroCollector(BaseTushareCollector):
         return self.api_call("shibor", date=date) if date else self.api_call("shibor")
 
     def store_shibor(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawShibor).filter_by(date=rec.get("date")).first()
-                if existing:
-                    continue
-                session.add(RawShibor(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawShibor, records, ["date"])

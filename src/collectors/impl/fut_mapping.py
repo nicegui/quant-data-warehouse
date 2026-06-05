@@ -43,17 +43,5 @@ class FutMappingCollector(BaseTushareCollector):
                 "mapping_ts_code": row.get("mapping_ts_code", ""),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawFutMapping).filter_by(
-                    ts_code=rec["ts_code"],
-                    trade_date=rec["trade_date"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawFutMapping(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawFutMapping, records, ["ts_code", "trade_date"])

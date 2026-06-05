@@ -44,19 +44,5 @@ class TradeCalCollector(BaseTushareCollector):
                 "pretrade_date": row.get("pretrade_date"),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RefTradeCal).filter_by(
-                    exchange=rec["exchange"],
-                    cal_date=rec["cal_date"],
-                ).first()
-                if existing:
-                    existing.is_open = rec["is_open"]  # upsert
-                    session.add(existing)
-                else:
-                    session.add(RefTradeCal(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RefTradeCal, records, ["exchange", "cal_date"])

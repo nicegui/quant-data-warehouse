@@ -122,49 +122,63 @@ class CryptoOhlcvCollector(BaseCollector):
         return validated
 
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawCryptoOhlcv).filter_by(
-                    exchange=rec["exchange"],
-                    symbol=rec["symbol"],
-                    timestamp=rec["timestamp"],
-                    timeframe=rec["timeframe"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawCryptoOhlcv(**rec))
-                written += 1
-        return written
+        return self._store_dedup(
+            RawCryptoOhlcv, records,
+            ["exchange", "symbol", "timestamp", "timeframe"]
+        )
 
     def compute_curated(self, symbol: str = "BTCUSDT", timeframe: str = "1d") -> int:
         """Copy from raw to curated (simple pass-through for now)."""
+        from src.db import nas_duckdb
         written = 0
-        with db_session() as session:
-            raw_rows = (
-                session.query(RawCryptoOhlcv)
-                .filter_by(symbol=symbol, timeframe=timeframe)
-                .order_by(RawCryptoOhlcv.timestamp.asc())
-                .all()
+        try:
+            result = nas_duckdb.query(
+                f"SELECT * FROM raw_crypto_ohlcv "
+                f"WHERE symbol='{symbol}' AND timeframe='{timeframe}' "
+                f"ORDER BY timestamp ASC"
             )
-            for raw_row in raw_rows:
-                existing = session.query(CuratedCryptoOhlcv).filter_by(
-                    asset_id=None,  # TODO: resolve asset_id from Asset table
-                    timestamp=raw_row.timestamp,
-                    timeframe=raw_row.timeframe,
-                ).first()
-                if existing:
-                    continue
-                curated = CuratedCryptoOhlcv(
-                    asset_id=None,  # placeholder
-                    timestamp=raw_row.timestamp,
-                    open=raw_row.open,
-                    high=raw_row.high,
-                    low=raw_row.low,
-                    close=raw_row.close,
-                    volume=raw_row.volume,
-                    timeframe=raw_row.timeframe,
-                )
-                session.add(curated)
+            cols = result["columns"]
+            for row in result["rows"]:
+                raw_row = dict(zip(cols, row))
+                # Upsert to curated
+                nas_duckdb.upsert("curated_crypto_ohlcv", [{
+                    "asset_id": None,
+                    "timestamp": raw_row["timestamp"],
+                    "open": raw_row["open"],
+                    "high": raw_row["high"],
+                    "low": raw_row["low"],
+                    "close": raw_row["close"],
+                    "volume": raw_row["volume"],
+                    "timeframe": raw_row["timeframe"],
+                }], ["timestamp", "timeframe"])
                 written += 1
+        except Exception:
+            # Fallback to local
+            with db_session() as session:
+                raw_rows = (
+                    session.query(RawCryptoOhlcv)
+                    .filter_by(symbol=symbol, timeframe=timeframe)
+                    .order_by(RawCryptoOhlcv.timestamp.asc())
+                    .all()
+                )
+                for raw_row in raw_rows:
+                    existing = session.query(CuratedCryptoOhlcv).filter_by(
+                        asset_id=None,
+                        timestamp=raw_row.timestamp,
+                        timeframe=raw_row.timeframe,
+                    ).first()
+                    if existing:
+                        continue
+                    curated = CuratedCryptoOhlcv(
+                        asset_id=None,
+                        timestamp=raw_row.timestamp,
+                        open=raw_row.open,
+                        high=raw_row.high,
+                        low=raw_row.low,
+                        close=raw_row.close,
+                        volume=raw_row.volume,
+                        timeframe=raw_row.timeframe,
+                    )
+                    session.add(curated)
+                    written += 1
         return written

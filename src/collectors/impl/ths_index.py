@@ -26,10 +26,5 @@ class ThsIndexCollector(BaseTushareCollector):
                       "list_date": str(ld) if ld else None,
                       "type": x.get("type")})
         return r
-    def store_raw(self,recs):
-        w=0
-        with db_session()as s:
-            for r in recs:
-                e=s.query(RefThsIndex).filter_by(ts_code=r["ts_code"]).first()
-                if not e:s.add(RefThsIndex(**r));w+=1
-        return w
+    def store_raw(self, records: list[dict]) -> int:
+        return self._store_dedup(RefThsIndex, records, ["ts_code"])

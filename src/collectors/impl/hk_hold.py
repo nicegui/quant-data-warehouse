@@ -87,11 +87,16 @@ class HkHoldCollector(BaseTushareCollector):
         # Skip dates already in DB
         existing_dates: set[str] = set()
         try:
-            with db_session() as session:
-                rows = session.query(RawHkHold.trade_date).distinct().all()
-                existing_dates = {str(r[0]) for r in rows if r[0]}
+            from src.db import nas_duckdb
+            result = nas_duckdb.query("SELECT DISTINCT trade_date FROM raw_hk_hold WHERE trade_date IS NOT NULL")
+            existing_dates = {str(r["trade_date"]) for r in result if r.get("trade_date")}
         except Exception:
-            pass
+            try:
+                with db_session() as session:
+                    rows = session.query(RawHkHold.trade_date).distinct().all()
+                    existing_dates = {str(r[0]) for r in rows if r[0]}
+            except Exception:
+                pass
 
         pending = [d for d in all_dates if d not in existing_dates]
         if not pending:

@@ -68,23 +68,9 @@ class StkRewardsCollector(BaseTushareCollector):
         return validated
 
     # ── Store ──────────────────────────────────────────
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawStkRewards).filter_by(
-                    ts_code=rec["ts_code"],
-                    ann_date=rec.get("ann_date"),
-                    name=rec.get("name"),
-                ).first()
-                if existing:
-                    continue
-                session.add(RawStkRewards(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawStkRewards, records, ["ts_code", "ann_date", "name"])
 
-    # ── Main runner (overrides BaseCollector) ──────────
 
     def run(self, end_date: str = "", **kwargs) -> dict:
         """全市场遍历拉取，支持 checkpoint 断点续传。
@@ -104,11 +90,16 @@ class StkRewardsCollector(BaseTushareCollector):
         # 2. 获取 DB 中已有的股票（去重）
         existing_stocks: set[str] = set()
         try:
-            with db_session() as session:
-                rows = session.query(RawStkRewards.ts_code).distinct().all()
-                existing_stocks = {r[0] for r in rows if r[0]}
+            from src.db import nas_duckdb
+            result = nas_duckdb.query("SELECT DISTINCT ts_code FROM raw_stk_rewards WHERE ts_code IS NOT NULL")
+            existing_stocks = {r["ts_code"] for r in result if r.get("ts_code")}
         except Exception:
-            pass  # 表不存在或为空
+            try:
+                with db_session() as session:
+                    rows = session.query(RawStkRewards.ts_code).distinct().all()
+                    existing_stocks = {r[0] for r in rows if r[0]}
+            except Exception:
+                pass
 
         # 3. 确定从哪里开始（checkpoint 或从头）
         last_processed = self.get_checkpoint_date() or ""

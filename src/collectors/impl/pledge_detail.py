@@ -66,23 +66,9 @@ class PledgeDetailCollector(BaseTushareCollector):
         return validated
 
     # ── Store ───────────────────────────────────────────
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawPledgeDetail).filter_by(
-                    ts_code=rec["ts_code"],
-                    ann_date=rec["ann_date"],
-                    holder_name=rec["holder_name"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawPledgeDetail(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawPledgeDetail, records, ["ts_code", "ann_date", "holder_name"])
 
-    # ── Run (全市场遍历) ────────────────────────────────
 
     def run(self, **kwargs) -> dict:
         """全市场遍历拉取，checkpoint 断点续传。"""
@@ -95,11 +81,16 @@ class PledgeDetailCollector(BaseTushareCollector):
 
         existing_stocks: set[str] = set()
         try:
-            with db_session() as session:
-                rows = session.query(RawPledgeDetail.ts_code).distinct().all()
-                existing_stocks = {r[0] for r in rows if r[0]}
+            from src.db import nas_duckdb
+            result = nas_duckdb.query("SELECT DISTINCT ts_code FROM raw_pledge_detail WHERE ts_code IS NOT NULL")
+            existing_stocks = {r["ts_code"] for r in result if r.get("ts_code")}
         except Exception:
-            pass
+            try:
+                with db_session() as session:
+                    rows = session.query(RawPledgeDetail.ts_code).distinct().all()
+                    existing_stocks = {r[0] for r in rows if r[0]}
+            except Exception:
+                pass
 
         last_processed = self.get_checkpoint_date() or ""
         start_idx = 0

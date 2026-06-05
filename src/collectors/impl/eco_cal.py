@@ -16,10 +16,5 @@ class EcoCalCollector(BaseTushareCollector):
         r=[]
         for x in raw: r.append({k:x.get(k)for k in("date","time","currency","country","event","value","pre_value","fore_value")})
         return r
-    def store_raw(self,recs):
-        w=0
-        with db_session()as s:
-            for r in recs:
-                e=s.query(RawEcoCal).filter_by(date=r["date"],event=r.get("event")).first()
-                if not e:s.add(RawEcoCal(**r));w+=1
-        return w
+    def store_raw(self, records: list[dict]) -> int:
+        return self._store_dedup(RawEcoCal, records, ["date"])

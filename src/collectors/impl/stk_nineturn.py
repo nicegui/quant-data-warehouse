@@ -79,22 +79,9 @@ class StkNineturnCollector(BaseTushareCollector):
                 "raw_json": json.dumps(row, ensure_ascii=False, default=str),
             })
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawStkNineturn).filter_by(
-                    ts_code=rec["ts_code"],
-                    trade_date=rec["trade_date"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawStkNineturn(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawStkNineturn, records, ["ts_code", "trade_date"])
 
-    # ── Parallel Run ────────────────────────────────────
 
     def run(self, freq: str = "daily", **kwargs) -> dict:
         """并行全市场遍历，checkpoint 断点续传。
@@ -113,13 +100,18 @@ class StkNineturnCollector(BaseTushareCollector):
         # ── Compute pending ──
         existing_stocks: set[str] = set()
         try:
-            with db_session() as session:
-                rows = session.query(RawStkNineturn.ts_code).filter(
-                    RawStkNineturn.freq == freq
-                ).distinct().all()
-                existing_stocks = {r[0] for r in rows if r[0]}
+            from src.db import nas_duckdb
+            result = nas_duckdb.query(f"SELECT DISTINCT ts_code FROM raw_stk_nineturn WHERE freq = '{freq}' AND ts_code IS NOT NULL")
+            existing_stocks = {r["ts_code"] for r in result if r.get("ts_code")}
         except Exception:
-            pass
+            try:
+                with db_session() as session:
+                    rows = session.query(RawStkNineturn.ts_code).filter(
+                        RawStkNineturn.freq == freq
+                    ).distinct().all()
+                    existing_stocks = {r[0] for r in rows if r[0]}
+            except Exception:
+                pass
 
         last_processed = self.get_checkpoint_date() or ""
         start_idx = 0

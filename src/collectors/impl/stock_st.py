@@ -40,17 +40,5 @@ class StockStCollector(BaseTushareCollector):
             }
             for row in raw
         ]
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawStockSt).filter_by(
-                    trade_date=rec["trade_date"],
-                    ts_code=rec["ts_code"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawStockSt(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawStockSt, records, ["trade_date", "ts_code"])

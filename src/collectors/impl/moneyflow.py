@@ -72,22 +72,9 @@ class MoneyflowCollector(BaseTushareCollector):
             }
             validated.append(rec)
         return validated
-
     def store_raw(self, records: list[dict]) -> int:
-        written = 0
-        with db_session() as session:
-            for rec in records:
-                existing = session.query(RawMoneyflow).filter_by(
-                    trade_date=rec["trade_date"],
-                    ts_code=rec["ts_code"],
-                ).first()
-                if existing:
-                    continue
-                session.add(RawMoneyflow(**rec))
-                written += 1
-        return written
+        return self._store_dedup(RawMoneyflow, records, ["trade_date", "ts_code"])
 
-    # ── Date-loop Run ──────────────────────────────
 
     def _get_existing_dates(self) -> set[str]:
         """Return set of trade_dates that already have rows in DB."""

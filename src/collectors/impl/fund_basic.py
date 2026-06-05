@@ -70,12 +70,22 @@ class FundBasicCollector(BaseTushareCollector):
 
     def store_raw(self, records: list[dict]) -> int:
         """Full replace: clear old data, insert new batch."""
-        written = 0
+        from src.db import nas_duckdb
+        
+        if not records:
+            return 0
+        
+        try:
+            # Try NAS first
+            nas_duckdb.exec_sql("DELETE FROM raw_fund_basic")
+            result = nas_duckdb.insert("raw_fund_basic", records)
+            return result.get("written", len(records))
+        except Exception as e:
+            logger.warning(f"{self.name}: NAS failed ({e}), falling back to local")
+        
+        # Fallback to local
         with db_session() as session:
-            # Clear old data
             session.query(RawFundBasic).delete()
-
-            for rec in records:
-                session.add(RawFundBasic(**rec))
-                written += 1
-        return written
+            session.add_all([RawFundBasic(**rec) for rec in records])
+            session.commit()
+            return len(records)
