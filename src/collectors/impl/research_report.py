@@ -1,4 +1,13 @@
-"""券商研究报告 — ResearchReportCollector."""
+"""券商研究报告 — ResearchReportCollector.
+
+Tushare API: research_report
+  - start_date/end_date: 日期范围 (YYYYMMDD)
+  - limit: 每页最多 1000 条
+  - offset: 分页偏移
+  - 字段: trade_date, title, report_type, author, name, ts_code, inst_csname, ind_name, url
+
+Strategy: 按周拉取 + offset 分页, checkpoint 记录最后日期.
+"""
 import logging
 import time
 from datetime import datetime, timedelta
@@ -7,6 +16,8 @@ from src.collectors.base import BaseTushareCollector
 from src.models.research_report import RawResearchReport
 
 logger = logging.getLogger(__name__)
+
+_DEFAULT_START = "20170101"
 
 
 class ResearchReportCollector(BaseTushareCollector):
@@ -20,7 +31,27 @@ class ResearchReportCollector(BaseTushareCollector):
         super().__init__("research_report", token)
 
     def fetch(self, trade_date: str = "", **kwargs) -> list[dict]:
-        return self.api_call(self.api_name, trade_date=trade_date, limit=1000)
+        """Fetch with start_date/end_date pagination (limit 1000 per page)."""
+        start_date = kwargs.get("start_date", trade_date)
+        end_date = kwargs.get("end_date", trade_date)
+        all_records = []
+        offset = 0
+        while True:
+            page = self.api_call(
+                self.api_name,
+                start_date=start_date,
+                end_date=end_date,
+                limit=1000,
+                offset=offset,
+            )
+            if not page:
+                break
+            all_records.extend(page)
+            if len(page) < 1000:
+                break
+            offset += 1000
+            time.sleep(0.25)
+        return all_records
 
     def validate(self, raw: list[dict]) -> list[dict]:
         _s = lambda v: str(v) if v is not None else None
@@ -38,42 +69,53 @@ class ResearchReportCollector(BaseTushareCollector):
                 "url": _s(x.get("url")),
             })
         return validated
+
     def store_raw(self, records: list[dict]) -> int:
         return self._store_dedup(RawResearchReport, records, ["trade_date", "title"])
 
-
     def run(self) -> dict:
         t0 = time.time()
-        total, errors, days, consecutive_rate_limits = 0, 0, 0, 0
-        d = datetime(2017, 1, 1)
-        end = datetime(2026, 5, 3)
+        total, errors, windows = 0, 0, 0
 
-        while d <= end:
-            date_str = d.strftime("%Y%m%d")
+        # Checkpoint: last date processed
+        last_date = self.get_checkpoint_date()
+        if last_date:
+            start_dt = datetime.strptime(last_date, "%Y%m%d") + timedelta(days=1)
+        else:
+            start_dt = datetime(2017, 1, 1)
+
+        end_dt = datetime.now()
+
+        # Pull in 7-day windows
+        WINDOW_DAYS = 7
+        d = start_dt
+        while d <= end_dt:
+            chunk_end = min(d + timedelta(days=WINDOW_DAYS - 1), end_dt)
+            sd = d.strftime("%Y%m%d")
+            ed = chunk_end.strftime("%Y%m%d")
             try:
-                raw = self.fetch(trade_date=date_str)
+                raw = self.fetch(start_date=sd, end_date=ed)
                 if raw:
-                    total += self.store_raw(self.validate(raw))
-                days += 1
-                consecutive_rate_limits = 0
+                    written = self.store_raw(self.validate(raw))
+                    total += written
+                    self._update_checkpoint(ed, written)
+                windows += 1
             except Exception as e:
                 msg = str(e)
                 if "频率超限" in msg:
-                    consecutive_rate_limits += 1
-                    wait = min(consecutive_rate_limits * 15, 120)
-                    logger.warning(f"[{date_str}] rate-limited, backoff {wait}s (consecutive={consecutive_rate_limits})")
-                    time.sleep(wait)
+                    logger.warning(f"[{sd}~{ed}] rate-limited, sleep 60s")
+                    time.sleep(60)
                     errors += 1
-                    continue  # retry same date without advancing
+                    continue  # retry same window
                 else:
-                    logger.error(f"[{date_str}] ERROR: {e}")
+                    logger.error(f"[{sd}~{ed}] ERROR: {e}")
                     errors += 1
-            d += timedelta(days=1)
-            consecutive_rate_limits = 0
+            d = chunk_end + timedelta(days=1)
 
-            if days % 50 == 0:
-                logger.info(f"[{date_str}] {days} days, {total:,} rows | {days/(time.time()-t0):.1f} d/s")
-            time.sleep(self.RATE_LIMIT_SLEEP)
+            if windows % 20 == 0 and windows > 0:
+                logger.info(f"[{sd}~{ed}] {windows} windows, {total:,} rows | {windows / (time.time() - t0):.1f} w/s")
+            time.sleep(0.25)
 
-        logger.info(f"research_report DONE: {days} days, {total:,} rows, {errors} err, {int(time.time()-t0)}s")
-        return {"status": "success", "written": total, "days": days, "errors": errors, "elapsed": time.time() - t0}
+        elapsed = time.time() - t0
+        logger.info(f"research_report DONE: {windows} windows, {total:,} rows, {errors} err, {int(elapsed)}s")
+        return {"status": "success", "written": total, "windows": windows, "errors": errors, "elapsed": elapsed}
