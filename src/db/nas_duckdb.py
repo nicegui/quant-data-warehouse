@@ -7,6 +7,7 @@ instead of local SQLAlchemy + DuckDB file.
 from __future__ import annotations
 
 import logging
+import re
 from datetime import date, datetime
 from typing import Any, Optional
 
@@ -20,6 +21,26 @@ logger = logging.getLogger(__name__)
 NAS_URL = settings.db.duckdb_http_url
 _TIMEOUT = 30  # seconds
 
+# YYYYMMDD compact date pattern (Tushare style)
+_COMPACT_DATE = re.compile(r"^\d{8}$")
+# YYYYMMDD HH:MM:SS compact datetime (Tushare style)
+_COMPACT_DATETIME = re.compile(r"^\d{8}\s+\d{2}:\d{2}(:\d{2}(\.\d+)?)?$")
+
+
+def _normalize_date(val: Any) -> Any:
+    """Convert Tushare-style compact date strings to ISO format for DuckDB.
+
+    '20260604' → '2026-06-04'
+    '20260604 09:30:00' → '2026-06-04 09:30:00'
+    """
+    if not isinstance(val, str):
+        return val
+    if _COMPACT_DATE.match(val):
+        return f"{val[:4]}-{val[4:6]}-{val[6:8]}"
+    if _COMPACT_DATETIME.match(val):
+        return f"{val[:4]}-{val[4:6]}-{val[6:8]}{val[8:]}"
+    return val
+
 
 def _serialize_value(val: Any) -> Any:
     """Convert Python types to JSON-serializable values for DuckDB."""
@@ -29,8 +50,10 @@ def _serialize_value(val: Any) -> Any:
         return val.isoformat()
     if isinstance(val, date):
         return val.isoformat()
-    if isinstance(val, (int, float, str, bool)):
+    if isinstance(val, (int, float, bool)):
         return val
+    if isinstance(val, str):
+        return _normalize_date(val)
     # Fallback: stringify
     return str(val)
 
@@ -63,6 +86,8 @@ def upsert(table: str, records: list[dict[str, Any]], dedup_keys: list[str]) -> 
     Returns:
         {"written": int, "skipped": int}
     """
+    if not records:
+        return {"written": 0, "skipped": 0}
     serialized = _serialize_records(records)
     payload = {
         "table": table,
@@ -76,6 +101,8 @@ def upsert(table: str, records: list[dict[str, Any]], dedup_keys: list[str]) -> 
 
 def insert(table: str, records: list[dict[str, Any]]) -> dict:
     """Insert records via HTTP /insert endpoint."""
+    if not records:
+        return {"written": 0}
     serialized = _serialize_records(records)
     payload = {"table": table, "records": serialized}
     r = requests.post(f"{NAS_URL}/insert", json=payload, timeout=_TIMEOUT)
@@ -83,16 +110,20 @@ def insert(table: str, records: list[dict[str, Any]]) -> dict:
     return r.json()
 
 
-def query(sql: str) -> dict:
+def query(sql: str) -> list[dict]:
     """Run a SELECT query via HTTP /query endpoint.
 
     Returns:
-        {"columns": [...], "rows": [[...], ...], "row_count": int}
+        List of row dicts, e.g. [{"col1": val1, "col2": val2}, ...]
+        Empty list if no rows.
     """
     payload = {"query": sql}
     r = requests.post(f"{NAS_URL}/query", json=payload, timeout=_TIMEOUT)
     r.raise_for_status()
-    return r.json()
+    data = r.json()
+    columns = data.get("columns", [])
+    rows = data.get("rows", [])
+    return [dict(zip(columns, row)) for row in rows]
 
 
 def exec_sql(sql: str) -> dict:
